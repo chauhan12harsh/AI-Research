@@ -70,4 +70,16 @@ public class WorkspaceService {
 
     }
 
+
+    public void adjustCounters(UUID workspaceId,
+                               int docDelta,
+                               long bytesDelta) throws Exception {
+
+        Workspace ws = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new Exception("workspace not exists"));
+
+        ws.setDocCount(Math.max(0, ws.getDocCount() + docDelta));
+        ws.setByteCount(Math.max(0, ws.getByteCount() + bytesDelta));
+        workspaceRepository.save(ws);
+    }
 }

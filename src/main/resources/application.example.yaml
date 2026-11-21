@@ -30,6 +30,10 @@ app:
     application-key: <application-key>
     path-style-access: true
 
+  limits:
+    max-file-bytes: 26214400 # 25MB
+    workspace-bytes: 524288000 #500MB
+    max-pdf-pages: 800
 
 server:
   port: 5000

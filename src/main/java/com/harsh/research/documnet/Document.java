@@ -49,7 +49,7 @@ public class Document extends SoftDeletableEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private DocumentStatus status;
+    private DocumentStatus status=DocumentStatus.PENDING;
 
     private Integer pageCount;
 
@@ -89,4 +89,10 @@ public class Document extends SoftDeletableEntity {
     }
 
 
+    public void markedFailed(String code, String message){
+
+        this.status = DocumentStatus.FAILED;
+        this.errorCode = code;
+        this.errorMessage = message;
+    }
 }
