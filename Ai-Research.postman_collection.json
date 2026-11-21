@@ -1,0 +1,393 @@
+{
+  "info": {
+    "_postman_id": "9f81258d-0523-4788-a6a7-513cfddd7791",
+    "name": "Ai-Research",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57478474"
+  },
+  "item": [
+    {
+      "name": "Workspace",
+      "item": [
+        {
+          "name": "Create Workspace",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiI2ZjNlOThmMS1jZTJlLTQ5OGUtYTViMi1mMjIzYTUxNTRhNDciLCJpYXQiOjE3OTUxNjYyOTcsImV4cCI6MTc5NTE2OTg5N30.Ynx_2QLgCXs2nmNcbHjteqomd2k63qwiUDVxqu2Wjww",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\":\"Test-Workspace\",\r\n    \"description\":\"This is my workspace\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/v1/workspaces",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "v1",
+                "workspaces"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Workspace List",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiIzMjRjZWY4Ny03ODY1LTQxNGQtOTVkYi03YTRkNGYyYzZjMDQiLCJpYXQiOjE3OTUyNzQxNTAsImV4cCI6MTc5NTI3Nzc1MH0.MLhyJxMVSoy7DAY7qM5lpCSEnumfDxDcuC7HFae1hdY",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/v1/workspaces",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "v1",
+                "workspaces"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Workspace",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiI2ZjNlOThmMS1jZTJlLTQ5OGUtYTViMi1mMjIzYTUxNTRhNDciLCJpYXQiOjE3OTUxNjYyOTcsImV4cCI6MTc5NTE2OTg5N30.Ynx_2QLgCXs2nmNcbHjteqomd2k63qwiUDVxqu2Wjww",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n     \"name\": \"Test-Workspace\",\r\n    \"description\":\"This is my workspace\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/v1/workspaces/910f3424-f0af-40d4-82e3-36c8d5d67442",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "v1",
+                "workspaces",
+                "910f3424-f0af-40d4-82e3-36c8d5d67442"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Document",
+      "item": [
+        {
+          "name": "Upload",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiIzMjRjZWY4Ny03ODY1LTQxNGQtOTVkYi03YTRkNGYyYzZjMDQiLCJpYXQiOjE3OTUyNzQxNTAsImV4cCI6MTc5NTI3Nzc1MH0.MLhyJxMVSoy7DAY7qM5lpCSEnumfDxDcuC7HFae1hdY",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [
+                    "postman-cloud:///1f1e5bf4-fb37-4030-9f3c-eacacd6f28c4"
+                  ]
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/v1/workspace/910f3424-f0af-40d4-82e3-36c8d5d67442/documents?displayName=cloud-pricing-guide",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "v1",
+                "workspace",
+                "910f3424-f0af-40d4-82e3-36c8d5d67442",
+                "documents"
+              ],
+              "query": [
+                {
+                  "key": "displayName",
+                  "value": "cloud-pricing-guide"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GetDocument",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiIzMjRjZWY4Ny03ODY1LTQxNGQtOTVkYi03YTRkNGYyYzZjMDQiLCJpYXQiOjE3OTUyNzQxNTAsImV4cCI6MTc5NTI3Nzc1MH0.MLhyJxMVSoy7DAY7qM5lpCSEnumfDxDcuC7HFae1hdY",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/v1/documents/c711aa61-6f62-49e2-aad0-8d7462c08746",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                "c711aa61-6f62-49e2-aad0-8d7462c08746"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Document List",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiIzMjRjZWY4Ny03ODY1LTQxNGQtOTVkYi03YTRkNGYyYzZjMDQiLCJpYXQiOjE3OTUyNzQxNTAsImV4cCI6MTc5NTI3Nzc1MH0.MLhyJxMVSoy7DAY7qM5lpCSEnumfDxDcuC7HFae1hdY",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/v1/workspace/910f3424-f0af-40d4-82e3-36c8d5d67442/documents",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "v1",
+                "workspace",
+                "910f3424-f0af-40d4-82e3-36c8d5d67442",
+                "documents"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Download Url",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiIzMjRjZWY4Ny03ODY1LTQxNGQtOTVkYi03YTRkNGYyYzZjMDQiLCJpYXQiOjE3OTUyNzQxNTAsImV4cCI6MTc5NTI3Nzc1MH0.MLhyJxMVSoy7DAY7qM5lpCSEnumfDxDcuC7HFae1hdY",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n     \"name\": \"Test-Workspace\",\r\n    \"description\":\"This is my workspace\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/v1/documents/c711aa61-6f62-49e2-aad0-8d7462c08746/download",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                "c711aa61-6f62-49e2-aad0-8d7462c08746",
+                "download"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\":\"vapo@gmail.com\",\r\n    \"password\":\"vapo@123\",\r\n    \"fullName\":\"vapo rub\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/auth/register",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\":\"vapo@gmail.com\",\r\n    \"password\":\"vapo@123\"\r\n\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/v1/auth/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Me",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiIzMjRjZWY4Ny03ODY1LTQxNGQtOTVkYi03YTRkNGYyYzZjMDQiLCJpYXQiOjE3OTUyNzQxNTAsImV4cCI6MTc5NTI3Nzc1MH0.MLhyJxMVSoy7DAY7qM5lpCSEnumfDxDcuC7HFae1hdY",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/api/v1/users/me",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "v1",
+            "users",
+            "me"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
