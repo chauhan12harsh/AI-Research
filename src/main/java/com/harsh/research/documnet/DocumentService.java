@@ -129,12 +129,28 @@ public class DocumentService {
         }
 
         try {
-            document.setStatus(DocumentStatus.UPLOADED);
-            documentRepository.save(document);
+            int markedUploaded = documentRepository.markUploadedIfWorkspaceActive(
+                    document.getId(),
+                    DocumentStatus.PENDING,
+                    DocumentStatus.UPLOADED
+            );
+            if (markedUploaded != 1) {
+                try {
+                    b2StorageService.delete(storageKey);
+                } catch (RuntimeException cleanupFailure) {
+                    throw new IllegalStateException(
+                            "Document is being deleted and its uploaded object could not be cleaned",
+                            cleanupFailure
+                    );
+                }
+                throw new IllegalStateException(
+                        "Workspace or document deletion started while the file was uploading"
+                );
+            }
+        } catch (IllegalStateException lifecycleConflict) {
+            throw lifecycleConflict;
         } catch (RuntimeException persistenceFailure) {
-            // Keep the original object and reserved quota: if the status write
-            // failed, retaining the file allows an operator or retry flow to
-            // recover the document rather than creating an orphan.
+            // Keep the source object and quota so an operator can recover the row.
             try {
                 markUploadFailed(document, "DOCUMENT_STATUS_UPDATE_FAILED");
             } catch (RuntimeException statusFailure) {
