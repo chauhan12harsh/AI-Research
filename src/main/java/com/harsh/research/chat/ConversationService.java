@@ -7,6 +7,7 @@ import com.harsh.research.workspace.Workspace;
 import com.harsh.research.workspace.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,9 +65,14 @@ public class ConversationService {
             Pageable pageable
     ) throws Exception {
         workspaceService.get(workspaceId, userId);
+        Pageable boundedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                Math.min(pageable.getPageSize(), 100),
+                pageable.getSort()
+        );
         return conversationRepository
                 .findAllByWorkspace_IdAndUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(
-                        workspaceId, userId, pageable
+                        workspaceId, userId, boundedPageable
                 )
                 .map(conversation -> new ConversationResponse(
                         conversation.getId(),
