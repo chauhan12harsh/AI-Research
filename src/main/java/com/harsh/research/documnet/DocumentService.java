@@ -34,6 +34,7 @@ public class DocumentService {
     private final B2StorageService b2StorageService;
     private final DocumentIngestionSteps ingestionSteps;
 
+
     public Document upload(
             UUID workspaceId,
             UUID ownerId,
@@ -43,24 +44,29 @@ public class DocumentService {
 
         Workspace workspace = workspaceService.get(workspaceId, ownerId);
 
-        DocumentValidator.ValidateUpload validated = documentValidator.validate(file);
+        DocumentValidator.ValidateUpload validated =
+                documentValidator.validate(file);
 
         assertWithinQuota(workspace, validated.sizeBytes());
 
         Document exists = documentRepository
                 .findByWorkspace_IdAndChecksumSha256AndDeletedAtIsNull(
-                        workspaceId, validated.checksumSha256()
-                ).orElse(null);
+                        workspaceId,
+                        validated.checksumSha256()
+                )
+                .orElse(null);
 
         if (exists != null) {
             return exists;
         }
 
-        String displayName = displayNameOverride != null && !displayNameOverride.isBlank()
-                ? displayNameOverride
-                : file.getOriginalFilename();
+        String displayName =
+                displayNameOverride != null &&
+                        !displayNameOverride.isBlank()
+                        ? displayNameOverride
+                        : file.getOriginalFilename();
 
-        Document doc = Document.create(
+        Document document = Document.create(
                 workspace,
                 ownerId,
                 displayName,
@@ -73,47 +79,61 @@ public class DocumentService {
                 "pending"
         );
 
-        doc = documentRepository.save(doc);
+        document = documentRepository.save(document);
 
         String storageKey = storageKeyFactory.originalKey(
                 workspaceId,
-                doc.getId(),
+                document.getId(),
                 file.getOriginalFilename()
         );
 
-        doc.setStorageKey(storageKey);
-
-        String contentType = file.getContentType() != null
-                ? file.getContentType()
-                : validated.mimeType();
+        document.setStorageKey(storageKey);
 
         try {
             b2StorageService.put(
                     storageKey,
                     file.getInputStream(),
                     file.getSize(),
-                    contentType
+                    validated.mimeType()
             );
-        } catch (IOException e) {
-            doc.markedFailed(
-                    "STORAGE_WRITE_FAILED",
-                    "Could not upload the file - please try again"
+
+            document.setStatus(DocumentStatus.UPLOADED);
+            documentRepository.save(document);
+
+            workspaceService.adjustCounters(
+                    workspaceId,
+                    1,
+                    validated.sizeBytes()
             );
-            documentRepository.save(doc);
-            throw new UncheckedIOException(e);
+
+        } catch (Exception exception) {
+
+            document.markedFailed(
+                    "UPLOAD_FAILED",
+                    "Document upload failed"
+            );
+
+            documentRepository.save(document);
+
+            try {
+                b2StorageService.delete(storageKey);
+            } catch (Exception ignored) {
+                // A future cleanup process must remove orphaned objects.
+            }
+
+            throw new IllegalStateException(
+                    "Document upload failed",
+                    exception
+            );
         }
 
-        doc.setStatus(DocumentStatus.UPLOADED);
-        documentRepository.save(doc);
+        ingestionSteps.process(document.getId());
 
-        workspaceService.adjustCounters(workspaceId, 1, validated.sizeBytes());
-
-        ingestionSteps.extract(doc.getId());
-        ingestionSteps.chunk(doc.getId());
-
-        return documentRepository.findByIdAndDeletedAtIsNull(doc.getId())
-                .orElseThrow(() -> new IllegalStateException("Document not found"));
+        return documentRepository.findByIdAndDeletedAtIsNull(
+                document.getId()
+        ).orElseThrow();
     }
+
 
     public Document get(UUID documentId, UUID ownerId) throws Exception {
         return documentRepository.findByIdAndWorkspace_OwnerIdAndDeletedAtIsNull(
@@ -180,28 +200,33 @@ public class DocumentService {
         );
     }
 
+
     public Document retry(
             UUID documentId,
             UUID ownerId
     ) throws Exception {
 
-        Document doc = get(documentId, ownerId);
+        Document document = get(documentId, ownerId);
 
-        if (doc.getStatus() != DocumentStatus.FAILED) {
-            throw new Exception("Only a failed document can be retried");
+        if (document.getStatus() != DocumentStatus.FAILED) {
+            throw new IllegalStateException(
+                    "Only failed documents can be retried"
+            );
         }
 
-        doc.setStatus(DocumentStatus.UPLOADED);
-        doc.setErrorCode(null);
-        doc.setErrorMessage(null);
-        documentRepository.save(doc);
+        document.setStatus(DocumentStatus.UPLOADED);
+        document.setErrorCode(null);
+        document.setErrorMessage(null);
 
-        ingestionSteps.extract(doc.getId());
-        ingestionSteps.chunk(doc.getId());
+        documentRepository.save(document);
 
-        return documentRepository.findByIdAndDeletedAtIsNull(doc.getId())
-                .orElseThrow(() -> new IllegalStateException("Document not found"));
+        ingestionSteps.process(document.getId());
+
+        return documentRepository.findByIdAndDeletedAtIsNull(
+                document.getId()
+        ).orElseThrow();
     }
+
 
     public void delete(
             UUID documentId,

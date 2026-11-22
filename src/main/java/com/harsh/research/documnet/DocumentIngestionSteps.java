@@ -10,7 +10,6 @@ import com.harsh.research.documnet.extract.ExtractionResult;
 import com.harsh.research.documnet.extract.PdfTextExtractor;
 import com.harsh.research.documnet.storage.B2StorageService;
 import com.harsh.research.documnet.storage.StorageKeyFactory;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -32,113 +31,168 @@ public class DocumentIngestionSteps {
     private final Chunker chunker;
     private final DocumentChunkRepository documentChunkRepository;
     private final ChunkEmbeddingService chunkEmbeddingService;
+    private final DocumentProcessingStatusService statusService;
 
-    @Transactional
-    public void extract(UUID documentId) {
-
-        Document document = getDocument(documentId);
+    public void process(UUID documentId) {
 
         try {
-            document.setStatus(DocumentStatus.EXTRACTING);
-            documentRepository.save(document);
-
-            ExtractionResult result;
-
-            try (InputStream input = b2StorageService.get(document.getStorageKey())) {
-                result = pdfTextExtractor.extract(input);
-            }
-
-            if (result.pageCount() > limitProperties.maxPdfPages()) {
-                throw new IllegalArgumentException("PDF exceeds maximum page count");
-            }
-
-            if (result.text().isBlank()) {
-                throw new IllegalArgumentException("No readable text found in PDF");
-            }
-
-            String extractedKey = storageKeyFactory.documentPrefix(
-                    document.getWorkspace().getId(),
-                    document.getId()
-            ) + "extracted/text.txt";
-
-            byte[] bytes = result.text().getBytes(StandardCharsets.UTF_8);
-
-            b2StorageService.put(
-                    extractedKey,
-                    new ByteArrayInputStream(bytes),
-                    bytes.length,
-                    "text/plain; charset=UTF-8"
-            );
-
-            document.setExtractedKey(extractedKey);
-            document.setPageCount(result.pageCount());
-            document.setCharCount(result.charCount());
-            document.setStatus(DocumentStatus.CHUNKING);
-            documentRepository.save(document);
+            extract(documentId);
+            chunkAndEmbed(documentId);
 
         } catch (Exception exception) {
-            markFailed(document, "TEXT_EXTRACTION_FAILED", exception);
-            throw new RuntimeException("Document extraction failed", exception);
+
+            statusService.markFailed(
+                    documentId,
+                    "DOCUMENT_PROCESSING_FAILED",
+                    safeMessage(exception)
+            );
+
+            throw new IllegalStateException(
+                    "Document processing failed",
+                    exception
+            );
         }
     }
 
-    @Transactional
-    public void chunk(UUID documentId) {
+    private void extract(UUID documentId) throws Exception {
 
         Document document = getDocument(documentId);
 
-        try {
-            if (document.getExtractedKey() == null) {
-                throw new IllegalStateException("Document text has not been extracted");
-            }
+        statusService.updateStatus(
+                documentId,
+                DocumentStatus.EXTRACTING
+        );
 
-            String text = b2StorageService.getAsString(document.getExtractedKey());
-            List<Chunk> chunks = chunker.chunk(text);
+        ExtractionResult result;
 
-            if (chunks.isEmpty()) {
-                throw new IllegalStateException("No chunks were generated");
-            }
+        try (InputStream input =
+                     b2StorageService.get(document.getStorageKey())) {
 
-            documentChunkRepository.deleteByDocumentId(documentId);
-
-            List<DocumentChunk> savedChunks = documentChunkRepository.saveAll(
-                    chunks.stream()
-                            .map(chunk -> DocumentChunk.form(documentId, chunk))
-                            .toList()
-            );
-
-            document.setStatus(DocumentStatus.EMBEDDING);
-            documentRepository.save(document);
-
-            chunkEmbeddingService.embedDocument(
-                    documentId,
-                    document.getWorkspace().getId(),
-                    savedChunks
-            );
-
-            document.setStatus(DocumentStatus.READY);
-            document.setErrorCode(null);
-            document.setErrorMessage(null);
-            documentRepository.save(document);
-
-        } catch (Exception exception) {
-            markFailed(document, "CHUNK_OR_EMBEDDING_FAILED", exception);
-            throw new RuntimeException("Document chunking or embedding failed", exception);
+            result = pdfTextExtractor.extract(input);
         }
+
+        if (result.pageCount() > limitProperties.maxPdfPages()) {
+            throw new IllegalArgumentException(
+                    "PDF exceeds maximum page count"
+            );
+        }
+
+        if (result.text() == null || result.text().isBlank()) {
+            throw new IllegalArgumentException(
+                    "No readable text found in PDF"
+            );
+        }
+
+        String extractedKey = storageKeyFactory.documentPrefix(
+                document.getWorkspace().getId(),
+                document.getId()
+        ) + "extracted/text.txt";
+
+        byte[] bytes = result.text().getBytes(StandardCharsets.UTF_8);
+
+        b2StorageService.put(
+                extractedKey,
+                new ByteArrayInputStream(bytes),
+                bytes.length,
+                "text/plain; charset=UTF-8"
+        );
+
+        updateExtractionMetadata(
+                documentId,
+                extractedKey,
+                result.pageCount(),
+                result.charCount()
+        );
+    }
+
+    private void chunkAndEmbed(UUID documentId) throws Exception {
+
+        Document document = getDocument(documentId);
+
+        if (document.getExtractedKey() == null) {
+            throw new IllegalStateException(
+                    "Extracted document text is missing"
+            );
+        }
+
+        statusService.updateStatus(
+                documentId,
+                DocumentStatus.CHUNKING
+        );
+
+        String text = b2StorageService.getAsString(
+                document.getExtractedKey()
+        );
+
+        List<Chunk> chunks = chunker.chunk(text);
+
+        if (chunks.isEmpty()) {
+            throw new IllegalStateException(
+                    "No chunks generated"
+            );
+        }
+
+        documentChunkRepository.deleteByDocumentId(documentId);
+
+        List<DocumentChunk> savedChunks =
+                documentChunkRepository.saveAll(
+                        chunks.stream()
+                                .map(chunk ->
+                                        DocumentChunk.form(documentId, chunk)
+                                )
+                                .toList()
+                );
+
+        statusService.updateStatus(
+                documentId,
+                DocumentStatus.EMBEDDING
+        );
+
+        chunkEmbeddingService.embedDocument(
+                documentId,
+                document.getWorkspace().getId(),
+                savedChunks
+        );
+
+        statusService.markReady(documentId);
+    }
+
+    private void updateExtractionMetadata(
+            UUID documentId,
+            String extractedKey,
+            int pageCount,
+            int charCount
+    ) {
+
+        Document document = getDocument(documentId);
+
+        document.setExtractedKey(extractedKey);
+        document.setPageCount(pageCount);
+        document.setCharCount(charCount);
+        document.setStatus(DocumentStatus.CHUNKING);
+
+        documentRepository.save(document);
     }
 
     private Document getDocument(UUID documentId) {
-        return documentRepository.findByIdAndDeletedAtIsNull(documentId)
-                .orElseThrow(() -> new IllegalArgumentException("Document not found"));
+
+        return documentRepository
+                .findByIdAndDeletedAtIsNull(documentId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Document not found")
+                );
     }
 
-    private void markFailed(Document document, String code, Exception exception) {
-        document.markedFailed(
-                code,
-                exception.getMessage() == null
-                        ? "Document processing failed"
-                        : exception.getMessage()
-        );
-        documentRepository.save(document);
+    private String safeMessage(Exception exception) {
+
+        String message = exception.getMessage();
+
+        if (message == null || message.isBlank()) {
+            return "An error occurred while processing the document";
+        }
+
+        return message.length() > 500
+                ? message.substring(0, 500)
+                : message;
     }
 }
