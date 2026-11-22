@@ -14,7 +14,7 @@ import java.util.UUID;
 public class DocumentProcessingQueue {
 
     private static final int MAX_ATTEMPTS = 5;
-    private static final Duration LOCK_TIMEOUT = Duration.ofMinutes(15);
+    private static final Duration LOCK_TIMEOUT = Duration.ofHours(1);
 
     private final DocumentProcessingJobRepository jobRepository;
     private final DocumentIngestionSteps ingestionSteps;
@@ -22,15 +22,21 @@ public class DocumentProcessingQueue {
 
     @Transactional
     public void enqueue(UUID documentId) {
-        DocumentProcessingJob job = jobRepository.findByDocumentId(documentId)
-                .orElseGet(() -> DocumentProcessingJob.create(documentId));
+        Instant now = Instant.now();
+        DocumentProcessingJob existing = jobRepository.findByDocumentId(documentId)
+                .orElse(null);
 
-        job.setStatus(DocumentProcessingJobStatus.PENDING);
-        job.setAttempts(0);
-        job.setNextAttemptAt(Instant.now());
-        job.setLockedAt(null);
-        job.setLastError(null);
-        jobRepository.save(job);
+        if (existing == null) {
+            jobRepository.insertIfMissing(UUID.randomUUID(), documentId, now);
+            return;
+        }
+
+        existing.setStatus(DocumentProcessingJobStatus.PENDING);
+        existing.setAttempts(0);
+        existing.setNextAttemptAt(now);
+        existing.setLockedAt(null);
+        existing.setLastError(null);
+        jobRepository.save(existing);
     }
 
     @Scheduled(fixedDelayString = "${app.ingestion.poll-interval-ms:5000}")
