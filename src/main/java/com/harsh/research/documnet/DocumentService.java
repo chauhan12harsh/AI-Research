@@ -10,6 +10,7 @@ import com.harsh.research.workspace.Workspace;
 import com.harsh.research.workspace.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -163,8 +164,13 @@ public class DocumentService {
             Pageable pageable
     ) throws Exception {
         workspaceService.get(workspaceId, ownerId);
+        Pageable boundedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                Math.min(pageable.getPageSize(), 100),
+                pageable.getSort()
+        );
         return documentRepository.search(
-                workspaceId, status, sourceType, q == null ? "" : q.trim(), pageable
+                workspaceId, status, sourceType, q == null ? "" : q.trim(), boundedPageable
         );
     }
 
