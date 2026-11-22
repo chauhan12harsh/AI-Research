@@ -119,6 +119,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (matches(method, path, HttpMethod.POST, API_PREFIX + "/auth/refresh")) {
             return new Limit("refresh", 10, Duration.ofMinutes(1));
         }
+        if (matches(method, path, HttpMethod.PATCH, API_PREFIX + "/users/me/password")) {
+            return new Limit("password-change", 5, Duration.ofMinutes(1));
+        }
         if (matches(method, path, HttpMethod.POST,
                 API_PREFIX + "/workspace/*/documents")
                 || matches(method, path, HttpMethod.POST,
