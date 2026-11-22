@@ -123,6 +123,13 @@
 			<version>3.0.8</version>
 		</dependency>
 
+		<!-- Optional OCR for scanned/image-only PDF pages (requires native Tesseract + traineddata). -->
+		<dependency>
+			<groupId>net.sourceforge.tess4j</groupId>
+			<artifactId>tess4j</artifactId>
+			<version>5.13.0</version>
+		</dependency>
+
 		<dependency>
 			<groupId>com.knuddels</groupId>
 			<artifactId>jtokkit</artifactId>
