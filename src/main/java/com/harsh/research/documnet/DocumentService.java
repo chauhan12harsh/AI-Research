@@ -138,6 +138,13 @@ public class DocumentService {
                 try {
                     b2StorageService.delete(storageKey);
                 } catch (RuntimeException cleanupFailure) {
+                    // Restore a durable DELETING row so the cleanup worker can
+                    // retry even if a concurrent delete had already soft-deleted it.
+                    documentRepository.findById(document.getId()).ifPresent(orphan -> {
+                        orphan.setDeletedAt(null);
+                        orphan.setStatus(DocumentStatus.DELETING);
+                        documentRepository.save(orphan);
+                    });
                     throw new IllegalStateException(
                             "Document is being deleted and its uploaded object could not be cleaned",
                             cleanupFailure
