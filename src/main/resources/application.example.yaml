@@ -8,6 +8,12 @@ spring:
     username: <username>
     password: <password>
 
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 26MB
+      file-size-threshold: 2MB
+
   jpa:
     hibernate:
       ddl-auto: update
