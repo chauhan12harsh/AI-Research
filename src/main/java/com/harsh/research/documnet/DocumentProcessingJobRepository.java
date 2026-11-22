@@ -48,7 +48,12 @@ public interface DocumentProcessingJobRepository
     @Modifying
     @Query("""
             update DocumentProcessingJob j
-            set j.status = :pending, j.lockedAt = null, j.nextAttemptAt = :now
+            set j.status = case when j.attempts + 1 >= :maxAttempts
+                                then :dead else :pending end,
+                j.attempts = j.attempts + 1,
+                j.lockedAt = null,
+                j.nextAttemptAt = :now,
+                j.lastError = 'Processing worker lease expired'
             where j.id = :id
               and j.status = :processing
               and j.lockedAt < :staleBefore
@@ -57,6 +62,8 @@ public interface DocumentProcessingJobRepository
             @Param("id") UUID id,
             @Param("processing") DocumentProcessingJobStatus processing,
             @Param("pending") DocumentProcessingJobStatus pending,
+            @Param("dead") DocumentProcessingJobStatus dead,
+            @Param("maxAttempts") int maxAttempts,
             @Param("now") Instant now,
             @Param("staleBefore") Instant staleBefore
     );
