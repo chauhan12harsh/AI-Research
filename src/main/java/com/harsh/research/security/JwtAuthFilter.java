@@ -44,14 +44,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 // Resolve authorization from current database state so a suspended
                 // account or changed role takes effect without waiting for token expiry.
                 if (user == null || user.getStatus() != UserStatus.ACTIVE
-                        || !user.getEmail().equalsIgnoreCase(tokenPrincipal.email())) {
+                        || !user.getEmail().equalsIgnoreCase(tokenPrincipal.email())
+                        || user.getTokenVersion() != tokenPrincipal.tokenVersion()) {
                     SecurityContextHolder.clearContext();
                     filterChain.doFilter(request, response);
                     return;
                 }
 
                 AuthPrincipal p = new AuthPrincipal(
-                        user.getId(), user.getEmail(), user.getRole().name()
+                        user.getId(), user.getEmail(), user.getRole().name(), user.getTokenVersion()
                 );
 
                 var authorities = List.of(
