@@ -1,5 +1,6 @@
 package com.harsh.research.chat;
 
+import com.harsh.research.common.ResourceNotFoundException;
 import com.harsh.research.chat.dto.ChatMessageResponse;
 import com.harsh.research.chat.dto.ConversationResponse;
 import com.harsh.research.workspace.Workspace;
@@ -36,7 +37,7 @@ public class ConversationService {
                             conversationId, workspaceId, userId
                     )
                     .orElseThrow(() ->
-                            new IllegalArgumentException("Conversation not found")
+                            new ResourceNotFoundException("Conversation not found")
                     );
         }
 
@@ -83,7 +84,7 @@ public class ConversationService {
                 .findByIdAndWorkspace_IdAndUserIdAndDeletedAtIsNull(
                         conversationId, workspaceId, userId
                 )
-                .orElseThrow(() -> new IllegalArgumentException("Conversation not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
 
         return chatMessageRepository
                 .findTop12ByConversation_IdOrderByCreatedAtDesc(conversation.getId())
@@ -122,7 +123,7 @@ public class ConversationService {
                 .findByIdAndWorkspace_IdAndUserIdAndDeletedAtIsNull(
                         conversationId, workspaceId, userId
                 )
-                .orElseThrow(() -> new IllegalArgumentException("Conversation not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
 
         chatMessageRepository.deleteAllByConversation_Id(conversationId);
         conversation.softDelete();
