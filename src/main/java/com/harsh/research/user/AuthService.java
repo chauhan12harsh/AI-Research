@@ -1,5 +1,6 @@
 package com.harsh.research.user;
 
+import com.harsh.research.common.ConflictException;
 import com.harsh.research.security.JwtService;
 import com.harsh.research.user.dto.AuthResponse;
 import com.harsh.research.user.dto.LoginRequest;
@@ -25,16 +26,16 @@ public class AuthService {
         String email = request.email().trim().toLowerCase(java.util.Locale.ROOT);
 
         if (userRepository.existsByEmail(email)) {
-            throw new Exception("User with this email already exists");
+            throw new ConflictException("User with this email already exists");
         }
 
         if (request.password().getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72) {
-            throw new Exception("Password must not exceed 72 UTF-8 bytes");
+            throw new IllegalArgumentException("Password must not exceed 72 UTF-8 bytes");
         }
 
         if (CommonPasswords.LIST.stream()
                 .anyMatch(common -> common.equalsIgnoreCase(request.password()))) {
-            throw new Exception("That password is too common. Please choose another one");
+            throw new IllegalArgumentException("That password is too common. Please choose another one");
         }
 
         User user = User.register(
@@ -48,13 +49,16 @@ public class AuthService {
             // method rather than later at transaction commit.
             user = userRepository.saveAndFlush(user);
         } catch (DataIntegrityViolationException exception) {
-            throw new Exception("User with this email already exists", exception);
+            throw new ConflictException("User with this email already exists");
         }
 
         return toAuthResponse(user);
     }
 
     public AuthResponse login(LoginRequest request) throws Exception {
+        if (request.password().getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72) {
+            throw new BadCredentialsException("Invalid username or password");
+        }
         String email = request.email().trim().toLowerCase(java.util.Locale.ROOT);
 
         User user = userRepository.findByEmail(email)
@@ -67,7 +71,7 @@ public class AuthService {
         }
 
         if (user.getStatus() == UserStatus.SUSPEND) {
-            throw new Exception("This account has been suspended");
+            throw new org.springframework.security.authentication.DisabledException("This account has been suspended");
         }
 
         return toAuthResponse(user);
