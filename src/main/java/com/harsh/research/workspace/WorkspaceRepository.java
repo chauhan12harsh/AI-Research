@@ -19,7 +19,7 @@ public interface WorkspaceRepository extends JpaRepository<Workspace, UUID> {
 
     @Transactional
     @Transactional
-    @org.springframework.data.jpa.repository.Modifying
+    @Transactional\n    @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query("""
         UPDATE Workspace w
         SET w.docCount = w.docCount + 1,
@@ -35,7 +35,7 @@ public interface WorkspaceRepository extends JpaRepository<Workspace, UUID> {
             @org.springframework.data.repository.query.Param("maxCurrentBytes") long maxCurrentBytes
     );
 
-    @org.springframework.data.jpa.repository.Modifying
+    @Transactional\n    @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query("""
         UPDATE Workspace w
         SET w.docCount = CASE
@@ -54,7 +54,7 @@ public interface WorkspaceRepository extends JpaRepository<Workspace, UUID> {
             @org.springframework.data.repository.query.Param("bytesDelta") long bytesDelta
     );
 
-    @org.springframework.data.jpa.repository.Modifying
+    @Transactional\n    @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query("""
         UPDATE Workspace w
         SET w.chatCount = CASE
