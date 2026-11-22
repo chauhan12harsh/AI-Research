@@ -33,3 +33,12 @@ build/
 .vscode/
 
 /src/main/resources/application.yaml
+
+# Local application configuration
+src/main/resources/application.yaml
+src/main/resources/application.yml
+
+# Environment files
+.env
+.env.*
+!.env.example
