@@ -67,5 +67,8 @@ app:
   embedding:
     batch-size: 64
 
+  ingestion:
+    poll-interval-ms: 5000
+
 server:
   port: 5000
