@@ -1,5 +1,6 @@
 package com.harsh.research.documnet;
 
+import com.harsh.research.common.ResourceNotFoundException;
 import com.harsh.research.workspace.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ public class DocumentDeletionService {
     @Transactional
     public Document markDeleting(UUID documentId) throws Exception {
         Document document = documentRepository.findByIdAndDeletedAtIsNullForUpdate(documentId)
-                .orElseThrow(() -> new IllegalArgumentException("Document not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Document not found"));
 
         if (document.getStatus() != DocumentStatus.DELETING) {
             jobRepository.cancelForDocument(
