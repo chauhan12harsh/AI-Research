@@ -292,6 +292,36 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Get processing status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/{{documentId}}/processing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                "{{documentId}}",
+                "processing"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
