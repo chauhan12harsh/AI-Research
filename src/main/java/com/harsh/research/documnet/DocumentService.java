@@ -34,7 +34,7 @@ public class DocumentService {
     private final StorageProperties storageProperties;
     private final StorageKeyFactory storageKeyFactory;
     private final B2StorageService b2StorageService;
-    private final DocumentIngestionSteps ingestionSteps;
+    private final DocumentProcessingQueue processingQueue;
     private final DocumentCleanupService cleanupService;
     private final DocumentDeletionService deletionService;
 
@@ -141,13 +141,7 @@ public class DocumentService {
             throw persistenceFailure;
         }
 
-        // Processing failures are persisted as FAILED by DocumentIngestionSteps.
-        // Return the document so the client can display its state and offer retry.
-        try {
-            ingestionSteps.process(document.getId());
-        } catch (RuntimeException ignored) {
-            // Status and error details are recorded by the ingestion pipeline.
-        }
+        processingQueue.enqueue(document.getId());
 
         return documentRepository.findByIdAndDeletedAtIsNull(document.getId())
                 .orElseThrow(() -> new IllegalStateException("Document not found after upload"));
@@ -219,11 +213,7 @@ public class DocumentService {
         document.setErrorMessage(null);
         documentRepository.save(document);
 
-        try {
-            ingestionSteps.process(document.getId());
-        } catch (RuntimeException ignored) {
-            // The ingestion pipeline records FAILED status and a safe error message.
-        }
+        processingQueue.enqueue(document.getId());
 
         return documentRepository.findByIdAndDeletedAtIsNull(document.getId())
                 .orElseThrow(() -> new IllegalStateException("Document not found after retry"));
