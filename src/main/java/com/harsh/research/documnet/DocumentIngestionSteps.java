@@ -23,6 +23,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class DocumentIngestionSteps {
 
+    private static final int MAX_EXTRACTED_CHARACTERS = 10_000_000;
+
     private final DocumentRepository documentRepository;
     private final B2StorageService b2StorageService;
     private final StorageKeyFactory storageKeyFactory;
@@ -80,6 +82,12 @@ public class DocumentIngestionSteps {
         if (result.text() == null || result.text().isBlank()) {
             throw new IllegalArgumentException(
                     "No readable text found in PDF"
+            );
+        }
+
+        if (result.text().length() > MAX_EXTRACTED_CHARACTERS) {
+            throw new IllegalArgumentException(
+                    "Extracted PDF text exceeds the maximum supported size"
             );
         }
 
