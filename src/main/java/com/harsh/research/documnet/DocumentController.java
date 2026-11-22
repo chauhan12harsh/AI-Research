@@ -20,7 +20,7 @@ public class DocumentController {
     private final DocumentService documentService;
 
 
-    @PostMapping("/api/v1/workspace/{wsId}/documents")
+    @PostMapping({"/api/v1/workspace/{wsId}/documents", "/api/v1/workspaces/{wsId}/documents"})
     public ApiResponse<DocumentResponse> upload(
             @CurrentUser UUID userId,
             @PathVariable UUID wsId,
@@ -35,7 +35,7 @@ public class DocumentController {
         );
     }
 
-    @GetMapping("/api/v1/workspace/{wsId}/documents")
+    @GetMapping({"/api/v1/workspace/{wsId}/documents", "/api/v1/workspaces/{wsId}/documents"})
     public ApiResponse<PageResponse<DocumentResponse>>  list(
         @CurrentUser UUID userId,
         @PathVariable UUID wsId,
