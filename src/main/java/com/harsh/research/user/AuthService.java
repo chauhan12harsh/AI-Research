@@ -77,6 +77,25 @@ public class AuthService {
         return toAuthResponse(user);
     }
 
+
+    @Transactional
+    public AuthResponse refresh(String rawRefreshToken) {
+        RefreshTokenService.IssuedTokens tokens =
+                refreshTokenService.rotate(rawRefreshToken);
+        User user = userRepository.findById(tokens.userId())
+                .orElseThrow(() -> new BadCredentialsException("Refresh token is invalid or expired"));
+        return new AuthResponse(
+                tokens.accessToken(),
+                tokens.refreshToken(),
+                tokens.expiresInSeconds(),
+                UserResponse.from(user)
+        );
+    }
+
+    public void logout(String rawRefreshToken) {
+        refreshTokenService.revoke(rawRefreshToken);
+    }
+
     private AuthResponse toAuthResponse(User user) {
         RefreshTokenService.IssuedTokens tokens = refreshTokenService.issue(user);
         return new AuthResponse(
