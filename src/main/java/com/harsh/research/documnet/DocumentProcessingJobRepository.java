@@ -110,4 +110,19 @@ public interface DocumentProcessingJobRepository
             @Param("dead") DocumentProcessingJobStatus dead
     );
 
+    @Transactional
+    @Modifying
+    @Query(value = """
+            insert into document_processing_jobs
+                (id, created_at, document_id, status, attempts, next_attempt_at)
+            values
+                (:id, :now, :documentId, 'PENDING', 0, :now)
+            on conflict (document_id) do nothing
+            """, nativeQuery = true)
+    int insertIfMissing(
+            @Param("id") UUID id,
+            @Param("documentId") UUID documentId,
+            @Param("now") Instant now
+    );
+
 }
