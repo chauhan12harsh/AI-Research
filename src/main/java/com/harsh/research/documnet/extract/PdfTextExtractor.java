@@ -84,6 +84,7 @@ public class PdfTextExtractor {
             return ExtractionResult.of(text.toString(), pageCount);
         } catch (InvalidPasswordException exception) {
             throw new IOException("PDF is password protected", exception);
+        }
     }
 
     private Tesseract createTesseract() throws IOException {
