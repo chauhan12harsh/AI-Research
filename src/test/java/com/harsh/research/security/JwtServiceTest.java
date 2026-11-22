@@ -28,6 +28,18 @@ class JwtServiceTest {
     }
 
     @Test
+    void preservesTokenVersionForRevocationChecks() {
+        JwtService service = new JwtService(SECRET);
+        UUID userId = UUID.randomUUID();
+
+        String token = service.generateAccessToken(
+                userId, "research@example.com", "USER", 7
+        );
+
+        assertEquals(7, service.parse(token).orElseThrow().tokenVersion());
+    }
+
+    @Test
     void rejectsTokenSignedByDifferentKey() {
         JwtService issuer = new JwtService(SECRET);
         JwtService verifier = new JwtService(
