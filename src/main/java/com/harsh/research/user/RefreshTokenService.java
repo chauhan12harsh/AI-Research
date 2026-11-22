@@ -45,7 +45,7 @@ public class RefreshTokenService {
         return new IssuedTokens(
                 user.getId(),
                 jwtService.generateAccessToken(
-                        user.getId(), user.getEmail(), user.getRole().name()
+                        user.getId(), user.getEmail(), user.getRole().name(), user.getTokenVersion()
                 ),
                 rawToken,
                 Duration.ofHours(1).toSeconds()
@@ -85,8 +85,17 @@ public class RefreshTokenService {
 
         refreshTokenRepository.findByTokenHashForUpdate(sha256(rawToken))
                 .ifPresent(token -> {
-                    token.revoke(Instant.now());
+                    Instant now = Instant.now();
+                    token.revoke(now);
                     refreshTokenRepository.save(token);
+
+                    // Logout revokes all refresh sessions and invalidates every
+                    // currently issued access token for this account.
+                    refreshTokenRepository.revokeAllByUserId(token.getUserId(), now);
+                    userRepository.findById(token.getUserId()).ifPresent(user -> {
+                        user.setTokenVersion(user.getTokenVersion() + 1);
+                        userRepository.save(user);
+                    });
                 });
     }
 
