@@ -16,19 +16,21 @@ public class CorsConfig {
     private List<String> allowedOrigins;
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource(){
-
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
         config.setAllowedOrigins(allowedOrigins);
-        config.setAllowedMethods(List.of("Get","Post","Put","Patch","Delete"));
-        config.setAllowedHeaders(List.of("Authorization","Content-Type"));
+        config.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+        ));
+        config.setAllowedHeaders(List.of(
+                "Authorization", "Content-Type", "Accept"
+        ));
+        config.setExposedHeaders(List.of("Location"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**",config);
-
+        source.registerCorsConfiguration("/api/**", config);
         return source;
     }
 }

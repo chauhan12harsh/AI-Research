@@ -1,7 +1,6 @@
 package com.harsh.research.documnet.storage;
 
 import com.harsh.research.config.StorageProperties;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -10,14 +9,17 @@ import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
-public class B2StorageService implements StorageService{
+public class B2StorageService implements StorageService {
 
     private final S3Presigner s3Presigner;
     private final S3Client s3Client;
@@ -25,13 +27,8 @@ public class B2StorageService implements StorageService{
 
     @Override
     public void put(String key, InputStream data, long contentLength, String contentType) {
-
-        byte[] bytes;
-
-        try {
-            bytes = data.readAllBytes();
-        } catch (IOException ioe) {
-            throw new UncheckedIOException("Failed to read data from " + key , ioe);
+        if (contentLength < 0) {
+            throw new IllegalArgumentException("Content length cannot be negative");
         }
 
         s3Client.putObject(
@@ -41,13 +38,12 @@ public class B2StorageService implements StorageService{
                         .contentLength(contentLength)
                         .contentType(contentType)
                         .build(),
-                RequestBody.fromBytes(bytes)
+                RequestBody.fromInputStream(data, contentLength)
         );
     }
 
     @Override
     public InputStream get(String key) {
-
         return s3Client.getObject(
                 GetObjectRequest.builder()
                         .bucket(storageProperties.bucket())
@@ -58,22 +54,22 @@ public class B2StorageService implements StorageService{
 
     @Override
     public String getAsString(String key) {
-
-        try (InputStream in = get(key)){
-
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            in.transferTo(out);
-            return out.toString(StandardCharsets.UTF_8);
-
-        }catch (IOException ioe) {
-            throw new UncheckedIOException("Failed to read data from " + key , ioe);
+        try (InputStream input = get(key);
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            input.transferTo(output);
+            return output.toString(StandardCharsets.UTF_8);
+        } catch (IOException exception) {
+            throw new UncheckedIOException("Failed to read object " + key, exception);
         }
     }
 
     @Override
     public PresignedUrl presignedGet(String key, Duration ttl) {
+        if (ttl == null || ttl.isZero() || ttl.isNegative()) {
+            throw new IllegalArgumentException("Presigned URL lifetime must be positive");
+        }
 
-        var presignedUrl = s3Presigner.presignGetObject(
+        var presigned = s3Presigner.presignGetObject(
                 GetObjectPresignRequest.builder()
                         .signatureDuration(ttl)
                         .getObjectRequest(
@@ -85,11 +81,14 @@ public class B2StorageService implements StorageService{
                         .build()
         );
 
-        return new PresignedUrl(presignedUrl.url().toString(), Instant.now().plus(ttl));
+        return new PresignedUrl(presigned.url().toString(), Instant.now().plus(ttl));
     }
 
     @Override
     public void delete(String key) {
+        if (key == null || key.isBlank()) {
+            return;
+        }
 
         s3Client.deleteObject(
                 DeleteObjectRequest.builder()
@@ -101,19 +100,19 @@ public class B2StorageService implements StorageService{
 
     @Override
     public boolean exists(String key) {
-
-        try{
+        try {
             s3Client.headObject(
                     HeadObjectRequest.builder()
                             .bucket(storageProperties.bucket())
                             .key(key)
                             .build()
             );
-
             return true;
-
-        }catch(NoSuchKeyException e){
-            return false;
+        } catch (S3Exception exception) {
+            if (exception.statusCode() == 404) {
+                return false;
+            }
+            throw exception;
         }
     }
 }

@@ -14,12 +14,13 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.Locale;
 
 @Component
 public class DocumentValidator {
 
     private final LimitProperties limitProperties;
-    private Tika tika = new Tika();
+    private final Tika tika = new Tika();
 
     public DocumentValidator(LimitProperties limitProperties) {
         this.limitProperties = limitProperties;
@@ -30,105 +31,96 @@ public class DocumentValidator {
             String mimeType,
             long sizeBytes,
             String checksumSha256
-    ){}
+    ) {}
 
     public ValidateUpload validate(MultipartFile file) throws Exception {
-
-        if(file.isEmpty()){
-            throw new Exception("The uploaded File is empty");
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("The uploaded file is empty");
         }
 
-        if(file.getSize() > limitProperties.maxFileBytes()){
-            throw new Exception("The uploaded file is too large");
+        if (file.getSize() > limitProperties.maxFileBytes()) {
+            throw new IllegalArgumentException("The uploaded file is too large");
         }
 
-        if(!"pdf".equals(extensionOf(file.getOriginalFilename()))){
-            throw new Exception("The uploaded file is not a pdf file");
+        if (!"pdf".equals(extensionOf(file.getOriginalFilename()))) {
+            throw new IllegalArgumentException("Only PDF files are supported");
         }
 
-
-        String detectMime = detectMime(file);
-        if(!"application/pdf".equals(detectMime)){
-            throw new Exception("The file's content doesn't matches its extension");
+        String detectedMimeType = detectMime(file);
+        if (!"application/pdf".equalsIgnoreCase(detectedMimeType)) {
+            throw new IllegalArgumentException(
+                    "The file content does not match the PDF extension"
+            );
         }
 
         assertReadablePdf(file);
 
-        String checksum = sha256(file);
-
-         ValidateUpload validateUpload = new ValidateUpload(
+        return new ValidateUpload(
                 SourceType.PDF,
-                detectMime,
+                detectedMimeType,
                 file.getSize(),
-                checksum
+                sha256(file)
         );
-
-        return validateUpload;
     }
 
-    private String extensionOf(String filename){
-        if(filename == null || !filename.contains(".")){
+    private String extensionOf(String filename) {
+        if (filename == null) {
             return "";
         }
-
-        return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
+        int dot = filename.lastIndexOf('.');
+        if (dot < 0 || dot == filename.length() - 1) {
+            return "";
+        }
+        return filename.substring(dot + 1).toLowerCase(Locale.ROOT);
     }
 
-    private String detectMime(MultipartFile file) throws Exception {
-
-        try (InputStream in = file.getInputStream()) {
-
-            return tika.detect(in, file.getOriginalFilename());
-
-        } catch (IOException e) {
-            throw new Exception("this file is not supported");
+    private String detectMime(MultipartFile file) throws IOException {
+        try (InputStream input = file.getInputStream()) {
+            return tika.detect(input, file.getOriginalFilename());
         }
     }
 
-    private void assertReadablePdf(MultipartFile file) throws Exception {
+    private void assertReadablePdf(MultipartFile file) throws IOException {
+        byte[] bytes = file.getBytes();
 
-        try {
-            byte[] bytes = file.getBytes();
-
-            try (PDDocument document = Loader.loadPDF(bytes)){
-
-                if(document.isEncrypted()){
-                    throw new Exception("This pdf is password protected");
-                }
-
-                if(document.getNumberOfPages() > limitProperties.maxPdfPages()){
-                    throw new Exception("This pdf has more than " + limitProperties.maxPdfPages() + "pages");
-                }
-
-
-            }catch (InvalidPasswordException e){
-                throw new Exception("This pdf is password protected");
-            }
-
-        } catch (IOException e) {
-            throw new Exception("This pdf is password protected");
-        }
-    }
-
-    private String sha256(MultipartFile file) throws Exception {
-
-        try(InputStream in = file.getInputStream()){
-
-            MessageDigest digest = MessageDigest.getInstance(
-                    "SHA-256"
-            );
-
-            try(DigestInputStream digestInputStream = new DigestInputStream(in, digest)){
-                digestInputStream.transferTo(
-                        OutputStream.nullOutputStream()
+        try (PDDocument document = Loader.loadPDF(bytes)) {
+            if (document.isEncrypted()) {
+                throw new IllegalArgumentException(
+                        "Password-protected PDF files are not supported"
                 );
             }
 
-            return HexFormat.of().formatHex(digest.digest());
-
-        } catch (IOException | NoSuchAlgorithmException e) {
-            throw new Exception("Could not read uploaded file");
+            if (document.getNumberOfPages() > limitProperties.maxPdfPages()) {
+                throw new IllegalArgumentException(
+                        "PDF exceeds the maximum of "
+                                + limitProperties.maxPdfPages() + " pages"
+                );
+            }
+        } catch (InvalidPasswordException exception) {
+            throw new IllegalArgumentException(
+                    "Password-protected PDF files are not supported",
+                    exception
+            );
+        } catch (IOException exception) {
+            throw new IllegalArgumentException(
+                    "The uploaded PDF is corrupt or cannot be opened",
+                    exception
+            );
         }
     }
 
+    private String sha256(MultipartFile file) throws IOException {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+            try (InputStream input = file.getInputStream();
+                 DigestInputStream digestInput = new DigestInputStream(input, digest)) {
+                digestInput.transferTo(OutputStream.nullOutputStream());
+            }
+
+            return HexFormat.of().formatHex(digest.digest());
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 is not available", exception);
+        }
+    }
 }

@@ -1,7 +1,6 @@
 package com.harsh.research.documnet;
 
 public enum DocumentStatus {
-
     PENDING,
     UPLOADED,
     EXTRACTING,
@@ -9,4 +8,5 @@ public enum DocumentStatus {
     EMBEDDING,
     READY,
     FAILED,
+    DELETING
 }
