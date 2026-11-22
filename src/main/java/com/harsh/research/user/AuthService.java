@@ -92,6 +92,34 @@ public class AuthService {
         );
     }
 
+    @Transactional
+    public void changePassword(
+            java.util.UUID userId,
+            com.harsh.research.user.dto.ChangePasswordRequest request
+    ) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BadCredentialsException("Invalid account"));
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new BadCredentialsException("Current password is incorrect");
+        }
+
+        if (request.newPassword().getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72) {
+            throw new IllegalArgumentException("Password must not exceed 72 UTF-8 bytes");
+        }
+        if (passwordEncoder.matches(request.newPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("New password must be different from the current password");
+        }
+        if (CommonPasswords.LIST.stream()
+                .anyMatch(common -> common.equalsIgnoreCase(request.newPassword()))) {
+            throw new IllegalArgumentException("That password is too common. Please choose another one");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+        refreshTokenService.revokeAllSessions(user);
+    }
+
     public void logout(String rawRefreshToken) {
         refreshTokenService.revoke(rawRefreshToken);
     }
