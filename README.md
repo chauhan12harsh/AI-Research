@@ -53,6 +53,7 @@ All endpoints are prefixed with `/api/v1`.
 - `POST /auth/refresh` — rotate a refresh token
 - `POST /auth/logout` — revoke all refresh sessions and invalidate issued access tokens
 - `GET /users/me`
+- `PATCH /users/me/password` — change password and revoke all existing sessions
 
 Register/login responses contain `accessToken`, `refreshToken`, `expiresInSeconds` and the user profile. Store refresh tokens securely; production browser clients should prefer an HttpOnly, Secure, SameSite cookie over JavaScript-accessible storage.
 
@@ -94,7 +95,8 @@ The Postman collection includes example requests. Configure its variables (`base
 - Upload policy is 25 MB per file; workspace quota is 500 MB by default.
 - Multipart limits are explicitly set to match the upload policy.
 - Ingestion polling and reconciliation intervals can be configured with `app.ingestion.poll-interval-ms` and `app.ingestion.reconcile-interval-ms`.
-- Incomplete document cleanup is retried in the background.
+- Incomplete document and workspace deletion cleanup is retried in the background.
+- Health probes are available at `/actuator/health/liveness` and `/actuator/health/readiness`.
 - Refresh tokens are opaque random values; only SHA-256 hashes are stored in PostgreSQL. Access tokens expire after one hour and refresh tokens after 30 days.
 - Logout invalidates all active sessions for the account by incrementing its token version.
 
