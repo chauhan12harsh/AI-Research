@@ -64,6 +64,7 @@ Register/login responses contain `accessToken`, `refreshToken`, `expiresInSecond
 - `POST /workspaces/{workspaceId}/documents` (multipart field: `file`; legacy singular `/workspace/{workspaceId}/documents` is also supported)
 - `GET /workspaces/{workspaceId}/documents`
 - `GET /documents/{documentId}`
+- `GET /documents/{documentId}/processing` — inspect retry attempts and next scheduled processing time
 - `GET /documents/{documentId}/download`
 - `GET /documents/{documentId}/content?offset=0&limit=20000`
 - `POST /documents/{documentId}/retry`
