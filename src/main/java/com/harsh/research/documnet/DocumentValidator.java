@@ -1,23 +1,19 @@
 package com.harsh.research.documnet;
 
-import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import org.apache.tika.Tika;
-import org.aspectj.bridge.Message;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.rmi.server.ExportException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
-import java.util.Locale;
 
 @Component
 public class DocumentValidator {
@@ -27,7 +23,6 @@ public class DocumentValidator {
 
     public DocumentValidator(LimitProperties limitProperties) {
         this.limitProperties = limitProperties;
-        System.out.println("Max file size: " + limitProperties.maxFileBytes());
     }
 
     public record ValidateUpload(

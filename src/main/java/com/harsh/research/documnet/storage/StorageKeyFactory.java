@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 @Component
 public class StorageKeyFactory {
 
-    private static final Pattern UNSAFE_CHARS= Pattern.compile("[^A-Za-z0-9._-]]");
+    private static final Pattern UNSAFE_CHARS= Pattern.compile("[^A-Za-z0-9._-]");
 
     private static final int MAX_FILENAME_LENGTH = 180;
 
@@ -29,7 +29,7 @@ public class StorageKeyFactory {
     public String documentPrefix(UUID workspaceId, UUID documentId){
         return keyPrefix
                 + "w/" + workspaceId
-                + "d/" + documentId
+                + "/d/" + documentId
                 + "/";
 
     }

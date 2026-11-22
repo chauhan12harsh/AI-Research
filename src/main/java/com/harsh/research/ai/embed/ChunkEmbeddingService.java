@@ -69,11 +69,11 @@ public class ChunkEmbeddingService {
 
             Map<String,Object> metaData = new HashMap<>();
 
-            metaData.put(ChunkVectorMetaData.DOCUMENT_ID,documentId.toString());
-            metaData.put(ChunkVectorMetaData.WORKSPACE_ID,documentId.toString());
-            metaData.put(ChunkVectorMetaData.CHUNK_INDEX,documentId.toString());
-            metaData.put(ChunkVectorMetaData.CHAR_START,documentId.toString());
-            metaData.put(ChunkVectorMetaData.CHAR_END,documentId.toString());
+            metaData.put(ChunkVectorMetaData.DOCUMENT_ID, documentId.toString());
+            metaData.put(ChunkVectorMetaData.WORKSPACE_ID, workspaceId.toString());
+            metaData.put(ChunkVectorMetaData.CHUNK_INDEX, chunk.getChunkIndex());
+            metaData.put(ChunkVectorMetaData.CHAR_START, chunk.getCharStart());
+            metaData.put(ChunkVectorMetaData.CHAR_END, chunk.getCharEnd());
 
             if(chunk.getPageNumber() != null){
                 metaData.put(ChunkVectorMetaData.PAGE_NUMBER,chunk.getPageNumber());

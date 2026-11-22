@@ -6,7 +6,6 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.stereotype.Component;
 
-import javax.print.Doc;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,11 +18,11 @@ public class PdfChunker implements Chunker {
 
     private final TokenCounter tokenCounter;
 
-    private final TokenTextSplitter splitter = TokenTextSplitter.builder()
-            .withChunkSize(MIN_CHUNK_SIZE_CHARS)
-            .withMinChunkSizeChars(MIN_CHUNK_SIZE_CHARS)
-            .build();
-
+    private final TokenTextSplitter splitter =
+            TokenTextSplitter.builder()
+                    .withChunkSize(TARGET_CHUNK_TOKENS)
+                    .withMinChunkSizeChars(MIN_CHUNK_SIZE_CHARS)
+                    .build();
 
     @Override
     public List<Chunk> chunk(String extractedText) {

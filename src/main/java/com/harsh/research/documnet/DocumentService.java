@@ -209,7 +209,7 @@ public class DocumentService {
     ) throws Exception {
         Document doc = get(documentId,ownerId);
         doc.softDelete();;
-        documentRepository.delete(doc);
+        documentRepository.save(doc);
 
         // todo delete chats related to this chat
         // todo delete document chunks  related to this chat

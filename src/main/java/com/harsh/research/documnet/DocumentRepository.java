@@ -24,8 +24,8 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
     @Query("""
         Select d from Document d
         Where d.workspace.id = :workspaceId and d.deletedAt is null
-        and (:status is null or d.status =: status)
-        and (:sourceType is null or d.sourceType =: sourceType)
+        and (:status is null or d.status = :status)
+        and (:sourceType is null or d.sourceType = :sourceType)
         and lower(d.displayName) like lower(CONCAT('%', :q , '%'))
     """)
     Page<Document> search(

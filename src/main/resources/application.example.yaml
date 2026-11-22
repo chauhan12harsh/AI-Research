@@ -16,6 +16,27 @@ spring:
       hibernate:
         jdbc:
           timezone: UTC
+  ai:
+    google:
+      genai:
+        api-key: <api-key>
+
+        chat:
+          options:
+            model: gemini-2.5-flash-lite
+            temperature: 0.2
+
+        embedding:
+          text:
+            model: gemini-embedding-001
+            dimensions: 768
+
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        dimensions: 768
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
 
 app:
   cors:
@@ -34,6 +55,9 @@ app:
     max-file-bytes: 26214400 # 25MB
     workspace-bytes: 524288000 #500MB
     max-pdf-pages: 800
+
+  embedding:
+    batch-size: 64
 
 server:
   port: 5000

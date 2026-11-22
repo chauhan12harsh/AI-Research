@@ -1,13 +1,11 @@
 package com.harsh.research.ai.chunk;
 
 import com.harsh.research.common.BaseEntity;
-import jakarta.persistence.Access;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import tools.jackson.core.ObjectReadContext;
 
 import java.util.UUID;
 
@@ -22,7 +20,7 @@ public class DocumentChunk extends BaseEntity {
     @Column(nullable = false,updatable = false)
     private int chunkIndex;
 
-    @Column(nullable = false,updatable = false)
+    @Column(nullable = false,updatable = false, columnDefinition = "TEXT")
     private String content;
 
     @Column(nullable = false,updatable = false)
