@@ -19,6 +19,7 @@ spring:
   ai:
     google:
       genai:
+        project-id: <google-cloud-project-id>
         api-key: <api-key>
 
         chat:
@@ -27,6 +28,9 @@ spring:
             temperature: 0.2
 
         embedding:
+          api-key: <api-key>
+          project-id: <google-cloud-project-id>
+          location: us-central1
           text:
             model: gemini-embedding-001
             dimensions: 768
@@ -39,6 +43,10 @@ spring:
         distance-type: COSINE_DISTANCE
 
 app:
+  security:
+    # Generate with: openssl rand -base64 32
+    jwt-secret: <base64-encoded-32-byte-secret>
+
   cors:
     allowed-origins: http://localhost:5173
 
