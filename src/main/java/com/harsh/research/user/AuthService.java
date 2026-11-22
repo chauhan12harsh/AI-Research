@@ -1,7 +1,6 @@
 package com.harsh.research.user;
 
 import com.harsh.research.common.ConflictException;
-import com.harsh.research.security.JwtService;
 import com.harsh.research.user.dto.AuthResponse;
 import com.harsh.research.user.dto.LoginRequest;
 import com.harsh.research.user.dto.RegisterRequest;
@@ -18,8 +17,8 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) throws Exception {
@@ -55,6 +54,7 @@ public class AuthService {
         return toAuthResponse(user);
     }
 
+    @Transactional
     public AuthResponse login(LoginRequest request) throws Exception {
         if (request.password().getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72) {
             throw new BadCredentialsException("Invalid username or password");
@@ -78,12 +78,12 @@ public class AuthService {
     }
 
     private AuthResponse toAuthResponse(User user) {
-        String token = jwtService.generateAccessToken(
-                user.getId(),
-                user.getEmail(),
-                user.getRole().name()
+        RefreshTokenService.IssuedTokens tokens = refreshTokenService.issue(user);
+        return new AuthResponse(
+                tokens.accessToken(),
+                tokens.refreshToken(),
+                tokens.expiresInSeconds(),
+                UserResponse.from(user)
         );
-
-        return new AuthResponse(token, UserResponse.from(user));
     }
 }
