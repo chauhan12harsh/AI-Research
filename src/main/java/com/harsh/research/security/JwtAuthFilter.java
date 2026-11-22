@@ -1,5 +1,8 @@
 package com.harsh.research.security;
 
+import com.harsh.research.user.User;
+import com.harsh.research.user.UserRepository;
+import com.harsh.research.user.UserStatus;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +23,7 @@ import java.util.Optional;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -33,8 +37,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             Optional<AuthPrincipal> principal = jwtService.parse(token);
 
-            if(principal.isPresent()){
-                AuthPrincipal p = principal.get();
+            if (principal.isPresent()) {
+                AuthPrincipal tokenPrincipal = principal.get();
+                User user = userRepository.findById(tokenPrincipal.userId()).orElse(null);
+
+                // Resolve authorization from current database state so a suspended
+                // account or changed role takes effect without waiting for token expiry.
+                if (user == null || user.getStatus() != UserStatus.ACTIVE
+                        || !user.getEmail().equalsIgnoreCase(tokenPrincipal.email())) {
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
+                AuthPrincipal p = new AuthPrincipal(
+                        user.getId(), user.getEmail(), user.getRole().name()
+                );
 
                 var authorities = List.of(
                         new SimpleGrantedAuthority("ROLE_" + p.role())
