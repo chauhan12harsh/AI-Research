@@ -84,9 +84,6 @@ public class PdfTextExtractor {
             return ExtractionResult.of(text.toString(), pageCount);
         } catch (InvalidPasswordException exception) {
             throw new IOException("PDF is password protected", exception);
-        } catch (TesseractException exception) {
-            throw new IOException("Unable to initialize OCR engine", exception);
-        }
     }
 
     private Tesseract createTesseract() throws IOException {
