@@ -1,6 +1,6 @@
 package com.harsh.research.documnet;
 
-import com.harsh.research.workspace.WorkspaceService;
+import com.harsh.research.workspace.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,7 +12,7 @@ import java.util.UUID;
 public class DocumentDeletionService {
 
     private final DocumentRepository documentRepository;
-    private final WorkspaceService workspaceService;
+    private final WorkspaceRepository workspaceRepository;
     private final DocumentProcessingJobRepository jobRepository;
 
     /**
@@ -35,11 +35,13 @@ public class DocumentDeletionService {
             document.setStatus(DocumentStatus.DELETING);
             documentRepository.save(document);
 
-            workspaceService.adjustCounters(
+            if (workspaceRepository.adjustUsageCounters(
                     document.getWorkspace().getId(),
                     -1,
                     -document.getSizeBytes()
-            );
+            ) != 1) {
+                throw new IllegalStateException("Workspace not found while releasing document quota");
+            }
         }
 
         return document;
