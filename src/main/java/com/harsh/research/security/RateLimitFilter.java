@@ -117,6 +117,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return new Limit("register", 3, Duration.ofMinutes(1));
         }
         if (matches(method, path, HttpMethod.POST,
+                API_PREFIX + "/workspace/*/documents")
+                || matches(method, path, HttpMethod.POST,
+                API_PREFIX + "/workspaces/*/documents")) {
+            return new Limit("upload", 10, Duration.ofMinutes(1));
+        }
+        if (matches(method, path, HttpMethod.POST,
                 API_PREFIX + "/workspaces/*/ask")) {
             return new Limit("rag", 20, Duration.ofMinutes(1));
         }
