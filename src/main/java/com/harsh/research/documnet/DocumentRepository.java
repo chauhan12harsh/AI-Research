@@ -4,6 +4,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,6 +20,23 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
     Optional<Document> findByIdAndWorkspace_OwnerIdAndDeletedAtIsNull(UUID id, UUID ownerId);
 
     Optional<Document> findByIdAndDeletedAtIsNull(UUID id);
+
+    @Transactional
+    @Modifying
+    @Query("""
+        update Document d
+        set d.status = :uploaded
+        where d.id = :documentId
+          and d.deletedAt is null
+          and d.status = :pending
+          and d.workspace.deletedAt is null
+    """)
+    int markUploadedIfWorkspaceActive(
+            @Param("documentId") UUID documentId,
+            @Param("pending") DocumentStatus pending,
+            @Param("uploaded") DocumentStatus uploaded
+    );
+
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select d from Document d where d.id = :id and d.deletedAt is null")
