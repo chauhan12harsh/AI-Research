@@ -1,4 +1,3 @@
-
 spring:
   application:
     name: ai-research
@@ -27,17 +26,16 @@ spring:
       hibernate:
         jdbc:
           timezone: UTC
+
   ai:
     google:
       genai:
         project-id: <google-cloud-project-id>
         api-key: <api-key>
-
         chat:
           options:
             model: gemini-2.5-flash-lite
             temperature: 0.2
-
         embedding:
           api-key: <api-key>
           project-id: <google-cloud-project-id>
@@ -53,10 +51,14 @@ spring:
         index-type: HNSW
         distance-type: COSINE_DISTANCE
 
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
 app:
   security:
     # Generate with: openssl rand -base64 32
     jwt-secret: <base64-encoded-32-byte-secret>
+    refresh-token-cleanup-ms: 86400000
 
   cors:
     allowed-origins: http://localhost:5173
@@ -71,8 +73,8 @@ app:
     path-style-access: true
 
   limits:
-    max-file-bytes: 26214400 # 25MB
-    workspace-bytes: 524288000 #500MB
+    max-file-bytes: 26214400
+    workspace-bytes: 524288000
     max-pdf-pages: 800
 
   embedding:
@@ -80,9 +82,14 @@ app:
 
   ingestion:
     poll-interval-ms: 5000
+    reconcile-interval-ms: 60000
+
+  deletion:
+    reconcile-interval-ms: 60000
 
 server:
   port: 5000
+  shutdown: graceful
 
 management:
   endpoints:
@@ -99,7 +106,3 @@ management:
       enabled: true
     readinessstate:
       enabled: true
-
-spring:
-  lifecycle:
-    timeout-per-shutdown-phase: 30s
