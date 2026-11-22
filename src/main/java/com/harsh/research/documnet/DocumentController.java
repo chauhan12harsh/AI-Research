@@ -2,6 +2,7 @@ package com.harsh.research.documnet;
 
 import com.harsh.research.common.ApiResponse;
 import com.harsh.research.documnet.dto.DocumentContentResponse;
+import com.harsh.research.documnet.dto.DocumentProcessingResponse;
 import com.harsh.research.documnet.dto.DocumentResponse;
 import com.harsh.research.documnet.dto.PageResponse;
 import com.harsh.research.documnet.storage.PresignedUrl;
@@ -18,6 +19,7 @@ import java.util.UUID;
 public class DocumentController {
 
     private final DocumentService documentService;
+    private final DocumentProcessingQueryService processingQueryService;
 
 
     @PostMapping({"/api/v1/workspace/{wsId}/documents", "/api/v1/workspaces/{wsId}/documents"})
@@ -65,6 +67,14 @@ public class DocumentController {
         return ApiResponse.Ok(
                 DocumentResponse.from(doc)
         );
+    }
+
+    @GetMapping("/api/v1/documents/{docId}/processing")
+    public ApiResponse<DocumentProcessingResponse> processing(
+            @CurrentUser UUID userId,
+            @PathVariable UUID docId
+    ) throws Exception {
+        return ApiResponse.Ok(processingQueryService.get(docId, userId));
     }
 
     @GetMapping("/api/v1/documents/{docId}/download")
