@@ -1,12 +1,12 @@
 package com.harsh.research.common;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -20,8 +20,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidation(
-            MethodArgumentNotValidException exception,
-            HttpServletRequest request
+            MethodArgumentNotValidException exception
     ) {
         List<String> details = exception.getBindingResult().getFieldErrors()
                 .stream()
@@ -59,6 +58,27 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleAccessDenied() {
         return error(HttpStatus.FORBIDDEN, "FORBIDDEN",
                 "You do not have permission to perform this action", List.of());
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDisabled() {
+        return error(HttpStatus.FORBIDDEN, "ACCOUNT_DISABLED",
+                "This account is not allowed to sign in", List.of());
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNotFound(Exception exception) {
+        return error(HttpStatus.NOT_FOUND, "NOT_FOUND", safeMessage(exception), List.of());
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConflict(Exception exception) {
+        return error(HttpStatus.CONFLICT, "CONFLICT", safeMessage(exception), List.of());
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalState(Exception exception) {
+        return error(HttpStatus.CONFLICT, "INVALID_STATE", safeMessage(exception), List.of());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
