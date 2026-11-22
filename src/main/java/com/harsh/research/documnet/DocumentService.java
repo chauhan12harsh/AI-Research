@@ -1,3 +1,4 @@
+
 package com.harsh.research.documnet;
 
 import com.harsh.research.config.StorageProperties;
@@ -12,7 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -32,6 +32,7 @@ public class DocumentService {
     private final StorageProperties storageProperties;
     private final StorageKeyFactory storageKeyFactory;
     private final B2StorageService b2StorageService;
+    private final DocumentIngestionSteps ingestionSteps;
 
     public Document upload(
             UUID workspaceId,
@@ -40,24 +41,24 @@ public class DocumentService {
             String displayNameOverride
     ) throws Exception {
 
-        Workspace workspace = workspaceService.get(workspaceId,ownerId);
+        Workspace workspace = workspaceService.get(workspaceId, ownerId);
 
         DocumentValidator.ValidateUpload validated = documentValidator.validate(file);
 
         assertWithinQuota(workspace, validated.sizeBytes());
 
+        Document exists = documentRepository
+                .findByWorkspace_IdAndChecksumSha256AndDeletedAtIsNull(
+                        workspaceId, validated.checksumSha256()
+                ).orElse(null);
 
-        Document exists = documentRepository.findByWorkspace_IdAndChecksumSha256AndDeletedAtIsNull(
-                workspaceId, validated.checksumSha256()
-        ).orElse(null);
-
-        if(exists != null) {
+        if (exists != null) {
             return exists;
         }
 
-
         String displayName = displayNameOverride != null && !displayNameOverride.isBlank()
-                            ? displayNameOverride : file.getOriginalFilename();
+                ? displayNameOverride
+                : file.getOriginalFilename();
 
         Document doc = Document.create(
                 workspace,
@@ -69,8 +70,7 @@ public class DocumentService {
                 validated.sizeBytes(),
                 validated.checksumSha256(),
                 storageProperties.bucket(),
-                 "pending"
-
+                "pending"
         );
 
         doc = documentRepository.save(doc);
@@ -83,7 +83,9 @@ public class DocumentService {
 
         doc.setStorageKey(storageKey);
 
-        String contentType = file.getContentType()!=null ? file.getContentType() : validated.mimeType();
+        String contentType = file.getContentType() != null
+                ? file.getContentType()
+                : validated.mimeType();
 
         try {
             b2StorageService.put(
@@ -93,8 +95,10 @@ public class DocumentService {
                     contentType
             );
         } catch (IOException e) {
-            doc.markedFailed("STORAGE_WRITE_FAILED", "Could not upload the file - please try again");
-
+            doc.markedFailed(
+                    "STORAGE_WRITE_FAILED",
+                    "Could not upload the file - please try again"
+            );
             documentRepository.save(doc);
             throw new UncheckedIOException(e);
         }
@@ -102,25 +106,23 @@ public class DocumentService {
         doc.setStatus(DocumentStatus.UPLOADED);
         documentRepository.save(doc);
 
-        workspaceService.adjustCounters(workspaceId,1, validated.sizeBytes());
+        workspaceService.adjustCounters(workspaceId, 1, validated.sizeBytes());
 
-        // document injection
-        return doc;
+        ingestionSteps.extract(doc.getId());
+        ingestionSteps.chunk(doc.getId());
 
+        return documentRepository.findByIdAndDeletedAtIsNull(doc.getId())
+                .orElseThrow(() -> new IllegalStateException("Document not found"));
     }
 
-
     public Document get(UUID documentId, UUID ownerId) throws Exception {
-
         return documentRepository.findByIdAndWorkspace_OwnerIdAndDeletedAtIsNull(
                 documentId,
                 ownerId
-        ).orElseThrow(
-                () -> new Exception("Document not found")
-        );
+        ).orElseThrow(() -> new Exception("Document not found"));
     }
 
-    public Page<Document>search(
+    public Page<Document> search(
             UUID workspaceId,
             UUID ownerId,
             DocumentStatus status,
@@ -129,9 +131,9 @@ public class DocumentService {
             Pageable pageable
     ) throws Exception {
 
-        workspaceService.get(workspaceId,ownerId);
+        workspaceService.get(workspaceId, ownerId);
 
-        String normalizedQ=q==null?"":q;
+        String normalizedQ = q == null ? "" : q;
 
         return documentRepository.search(
                 workspaceId,
@@ -147,9 +149,9 @@ public class DocumentService {
             UUID userId
     ) throws Exception {
 
-        Document doc = get(documentId,userId);
+        Document doc = get(documentId, userId);
 
-        return b2StorageService.presignedGet(doc.getStorageKey(),DOWNLOAD_TTL);
+        return b2StorageService.presignedGet(doc.getStorageKey(), DOWNLOAD_TTL);
     }
 
     public DocumentContentResponse getContent(
@@ -159,36 +161,34 @@ public class DocumentService {
             int limit
     ) throws Exception {
 
-        Document doc = get(documentId,ownerId);
+        Document doc = get(documentId, ownerId);
 
-        if(doc.getStatus() != DocumentStatus.READY || doc.getExtractedKey() == null ) {
+        if (doc.getStatus() != DocumentStatus.READY || doc.getExtractedKey() == null) {
             throw new Exception("This document hasn't finished processing");
         }
 
         String full = b2StorageService.getAsString(doc.getExtractedKey());
 
-        int from = Math.min(Math.max(offset,0),full.length());
-        int to = Math.min(from+Math.max(limit,0),full.length());
-
-        String content = full.substring(from, to);
+        int from = Math.min(Math.max(offset, 0), full.length());
+        int to = Math.min(from + Math.max(limit, 0), full.length());
 
         return new DocumentContentResponse(
-                content,
+                full.substring(from, to),
                 from,
-                to-from,
+                to - from,
                 full.length()
         );
     }
-
 
     public Document retry(
             UUID documentId,
             UUID ownerId
     ) throws Exception {
-        Document doc = get(documentId,ownerId);
 
-        if(doc.getStatus() != DocumentStatus.FAILED) {
-            throw new Exception("Only a failed document can be retried ");
+        Document doc = get(documentId, ownerId);
+
+        if (doc.getStatus() != DocumentStatus.FAILED) {
+            throw new Exception("Only a failed document can be retried");
         }
 
         doc.setStatus(DocumentStatus.UPLOADED);
@@ -196,40 +196,39 @@ public class DocumentService {
         doc.setErrorMessage(null);
         documentRepository.save(doc);
 
+        ingestionSteps.extract(doc.getId());
+        ingestionSteps.chunk(doc.getId());
 
-        // todo injection step
-
-        return doc;
+        return documentRepository.findByIdAndDeletedAtIsNull(doc.getId())
+                .orElseThrow(() -> new IllegalStateException("Document not found"));
     }
-
 
     public void delete(
             UUID documentId,
             UUID ownerId
     ) throws Exception {
-        Document doc = get(documentId,ownerId);
-        doc.softDelete();;
-        documentRepository.save(doc);
 
-        // todo delete chats related to this chat
-        // todo delete document chunks  related to this chat
+        Document doc = get(documentId, ownerId);
+
+        doc.softDelete();
+        documentRepository.save(doc);
 
         workspaceService.adjustCounters(
                 doc.getWorkspace().getId(),
-                -1,- doc.getSizeBytes()
+                -1,
+                -doc.getSizeBytes()
         );
-
-        // todo delete vectors
     }
 
-    private void assertWithinQuota(Workspace workspace, long additionalBytes) throws Exception {
+    private void assertWithinQuota(
+            Workspace workspace,
+            long additionalBytes
+    ) throws Exception {
 
         long limit = limitProperties.workspaceBytes();
+
         if (workspace.getByteCount() + additionalBytes > limit) {
-            throw new Exception("this workspace limit is only " + limit + "mb" );
+            throw new Exception("This workspace limit is " + limit + " bytes");
         }
-
     }
-
-
 }
