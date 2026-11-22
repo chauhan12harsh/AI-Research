@@ -1,5 +1,6 @@
 package com.harsh.research.documnet;
 
+import com.harsh.research.common.ResourceNotFoundException;
 import com.harsh.research.config.StorageProperties;
 import com.harsh.research.documnet.dto.DocumentContentResponse;
 import com.harsh.research.documnet.storage.B2StorageService;
@@ -150,7 +151,7 @@ public class DocumentService {
     public Document get(UUID documentId, UUID ownerId) throws Exception {
         return documentRepository.findByIdAndWorkspace_OwnerIdAndDeletedAtIsNull(
                 documentId, ownerId
-        ).orElseThrow(() -> new Exception("Document not found"));
+        ).orElseThrow(() -> new ResourceNotFoundException("Document not found"));
     }
 
     public Page<Document> search(
@@ -201,11 +202,11 @@ public class DocumentService {
     public Document retry(UUID documentId, UUID ownerId) throws Exception {
         Document document = get(documentId, ownerId);
         if (document.getStatus() != DocumentStatus.FAILED) {
-            throw new Exception("Only a failed document can be retried");
+            throw new IllegalStateException("Only a failed document can be retried");
         }
         if (isMissingStorageKey(document.getStorageKey())
                 || !b2StorageService.exists(document.getStorageKey())) {
-            throw new Exception("Original document file is unavailable; upload it again");
+            throw new IllegalStateException("Original document file is unavailable; upload it again");
         }
 
         document.setStatus(DocumentStatus.UPLOADED);
