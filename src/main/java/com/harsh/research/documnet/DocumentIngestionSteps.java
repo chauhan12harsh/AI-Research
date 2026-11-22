@@ -184,11 +184,17 @@ public class DocumentIngestionSteps {
 
     private Document getDocument(UUID documentId) {
 
-        return documentRepository
+        Document document = documentRepository
                 .findByIdAndDeletedAtIsNull(documentId)
                 .orElseThrow(() ->
                         new IllegalArgumentException("Document not found")
                 );
+
+        if (document.getStatus() == DocumentStatus.DELETING) {
+            throw new IllegalStateException("Document is being deleted");
+        }
+
+        return document;
     }
 
     private String safeMessage(Exception exception) {
