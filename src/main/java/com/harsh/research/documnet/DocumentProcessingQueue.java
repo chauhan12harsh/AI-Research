@@ -62,24 +62,23 @@ public class DocumentProcessingQueue {
 
         try {
             ingestionSteps.process(job.getDocumentId());
-            job.setStatus(DocumentProcessingJobStatus.COMPLETED);
-            job.setLastError(null);
-            job.setLockedAt(null);
-            jobRepository.save(job);
+            jobRepository.completeIfProcessing(
+                    jobId,
+                    DocumentProcessingJobStatus.PROCESSING,
+                    DocumentProcessingJobStatus.COMPLETED
+            );
         } catch (Exception exception) {
-            int attempts = job.getAttempts() + 1;
-            job.setAttempts(attempts);
-            job.setLockedAt(null);
-            job.setLastError("Document processing attempt failed");
-
-            if (attempts >= MAX_ATTEMPTS) {
-                job.setStatus(DocumentProcessingJobStatus.DEAD);
-            } else {
-                job.setStatus(DocumentProcessingJobStatus.PENDING);
-                long delaySeconds = Math.min(300, 10L << (attempts - 1));
-                job.setNextAttemptAt(Instant.now().plusSeconds(delaySeconds));
-            }
-            jobRepository.save(job);
+            int nextAttempt = job.getAttempts() + 1;
+            long delaySeconds = Math.min(300, 10L << Math.min(nextAttempt - 1, 5));
+            jobRepository.failIfProcessing(
+                    jobId,
+                    DocumentProcessingJobStatus.PROCESSING,
+                    DocumentProcessingJobStatus.PENDING,
+                    DocumentProcessingJobStatus.DEAD,
+                    MAX_ATTEMPTS,
+                    Instant.now().plusSeconds(delaySeconds),
+                    "Document processing attempt failed"
+            );
         }
     }
 
