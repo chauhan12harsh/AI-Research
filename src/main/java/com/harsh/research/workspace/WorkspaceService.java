@@ -99,6 +99,9 @@ public class WorkspaceService {
             conversationRepository.save(conversation);
         }
 
+        if (!conversations.isEmpty()) {
+            adjustChatCount(workspaceId, -conversations.size());
+        }
     }
 
     @Transactional
