@@ -2,6 +2,7 @@ package com.harsh.research.workspace;
 
 import com.harsh.research.documnet.Document;
 import com.harsh.research.documnet.DocumentCleanupService;
+import com.harsh.research.documnet.DocumentDeletionService;
 import com.harsh.research.documnet.DocumentRepository;
 import com.harsh.research.chat.ChatMessageRepository;
 import com.harsh.research.chat.Conversation;
@@ -22,6 +23,7 @@ public class WorkspaceService {
     private final WorkspaceRepository workspaceRepository;
     private final DocumentRepository documentRepository;
     private final DocumentCleanupService documentCleanupService;
+    private final DocumentDeletionService documentDeletionService;
     private final ConversationRepository conversationRepository;
     private final ChatMessageRepository chatMessageRepository;
 
@@ -82,9 +84,10 @@ public class WorkspaceService {
                 documentRepository.findAllByWorkspace_IdAndDeletedAtIsNull(workspaceId);
 
         for (Document document : documents) {
-            documentCleanupService.cleanup(document);
-            document.softDelete();
-            documentRepository.save(document);
+            Document deleting = documentDeletionService.markDeleting(document.getId());
+            documentCleanupService.cleanup(deleting);
+            deleting.softDelete();
+            documentRepository.save(deleting);
         }
 
         List<Conversation> conversations =
