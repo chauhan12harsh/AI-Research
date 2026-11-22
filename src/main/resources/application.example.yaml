@@ -86,6 +86,7 @@ app:
 
   deletion:
     reconcile-interval-ms: 60000
+    workspace-reconcile-interval-ms: 120000
 
 server:
   port: 5000
