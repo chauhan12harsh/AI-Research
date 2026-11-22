@@ -18,6 +18,7 @@ public interface WorkspaceRepository extends JpaRepository<Workspace, UUID> {
     Optional<Workspace> findByIdAndOwnerId(UUID id, UUID ownerId);
 
     @Transactional
+    @Transactional
     @org.springframework.data.jpa.repository.Modifying
     @org.springframework.data.jpa.repository.Query("""
         UPDATE Workspace w
