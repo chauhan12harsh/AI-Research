@@ -85,6 +85,9 @@ public class RefreshTokenService {
 
         refreshTokenRepository.findByTokenHashForUpdate(sha256(rawToken))
                 .ifPresent(token -> {
+                    if (token.isRevoked()) {
+                        return;
+                    }
                     Instant now = Instant.now();
                     token.revoke(now);
                     refreshTokenRepository.save(token);
