@@ -18,6 +18,7 @@ public class DocumentProcessingQueue {
 
     private final DocumentProcessingJobRepository jobRepository;
     private final DocumentIngestionSteps ingestionSteps;
+    private final DocumentRepository documentRepository;
 
     @Transactional
     public void enqueue(UUID documentId) {
@@ -79,6 +80,18 @@ public class DocumentProcessingQueue {
                 job.setNextAttemptAt(Instant.now().plusSeconds(delaySeconds));
             }
             jobRepository.save(job);
+        }
+    }
+
+    @Scheduled(fixedDelayString = "${app.ingestion.reconcile-interval-ms:60000}")
+    public void reconcileUnqueuedDocuments() {
+        for (Document document : documentRepository
+                .findTop100ByStatusAndDeletedAtIsNullOrderByCreatedAtAsc(
+                        DocumentStatus.UPLOADED
+                )) {
+            if (jobRepository.findByDocumentId(document.getId()).isEmpty()) {
+                enqueue(document.getId());
+            }
         }
     }
 
