@@ -27,6 +27,10 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
 
     java.util.List<Document> findAllByWorkspace_IdAndDeletedAtIsNull(UUID workspaceId);
 
+    java.util.List<Document> findTop100ByStatusAndDeletedAtIsNullOrderByCreatedAtAsc(
+            DocumentStatus status
+    );
+
     java.util.List<Document> findAllByIdInAndWorkspace_IdAndStatusAndDeletedAtIsNull(
             java.util.Collection<UUID> ids,
             UUID workspaceId,
