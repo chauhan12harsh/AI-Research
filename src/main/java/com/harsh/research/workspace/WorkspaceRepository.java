@@ -1,5 +1,6 @@
 package com.harsh.research.workspace;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -69,6 +70,20 @@ public interface WorkspaceRepository extends JpaRepository<Workspace, UUID> {
             @Param("workspaceId") UUID workspaceId,
             @Param("delta") int delta
     );
+
+
+    @Query("""
+        select w from Workspace w
+        where w.deletedAt is not null
+          and (
+            exists (select d.id from Document d
+                    where d.workspace = w and d.deletedAt is null)
+            or exists (select c.id from Conversation c
+                       where c.workspace = w and c.deletedAt is null)
+          )
+        order by w.deletedAt asc
+    """)
+    List<Workspace> findPendingCleanup(Pageable pageable);
 
     List<Workspace> findAllByOwnerIdAndDeletedAtNullOrderByCreatedAtDesc(UUID ownerId);
 
