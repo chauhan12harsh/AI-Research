@@ -102,6 +102,14 @@ public class RefreshTokenService {
                 });
     }
 
+    @Transactional
+    public void revokeAllSessions(User user) {
+        Instant now = Instant.now();
+        refreshTokenRepository.revokeAllByUserId(user.getId(), now);
+        user.setTokenVersion(user.getTokenVersion() + 1);
+        userRepository.save(user);
+    }
+
     @Scheduled(fixedDelayString = "${app.security.refresh-token-cleanup-ms:86400000}")
     public void removeExpiredTokens() {
         refreshTokenRepository.deleteAllByExpiresAtBefore(
