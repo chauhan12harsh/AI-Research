@@ -1,6 +1,5 @@
 package com.harsh.research.documnet;
 
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -30,7 +29,6 @@ public interface DocumentProcessingJobRepository
     );
 
     @Transactional
-    @Transactional
     @Modifying
     @Query("""
             update DocumentProcessingJob j
@@ -46,6 +44,7 @@ public interface DocumentProcessingJobRepository
             @Param("now") Instant now
     );
 
+    @Transactional
     @Modifying
     @Query("""
             update DocumentProcessingJob j
