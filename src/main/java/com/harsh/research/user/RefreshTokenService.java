@@ -3,6 +3,7 @@ package com.harsh.research.user;
 import com.harsh.research.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,6 +88,13 @@ public class RefreshTokenService {
                     token.revoke(Instant.now());
                     refreshTokenRepository.save(token);
                 });
+    }
+
+    @Scheduled(fixedDelayString = "${app.security.refresh-token-cleanup-ms:86400000}")
+    public void removeExpiredTokens() {
+        refreshTokenRepository.deleteAllByExpiresAtBefore(
+                Instant.now().minus(Duration.ofDays(30))
+        );
     }
 
     private String sha256(String rawToken) {
