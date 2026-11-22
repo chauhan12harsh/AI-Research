@@ -30,6 +30,10 @@ jobs:
       SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/ai_research
       SPRING_DATASOURCE_USERNAME: ai_research
       SPRING_DATASOURCE_PASSWORD: ai_research
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_FLYWAY_BASELINE_VERSION: "0"
       SPRING_AI_GOOGLE_GENAI_API_KEY: test-key-for-context-startup
       SPRING_AI_GOOGLE_GENAI_PROJECT_ID: test-project
       SPRING_AI_GOOGLE_GENAI_EMBEDDING_API_KEY: test-key-for-context-startup

@@ -18,6 +18,9 @@ public class DocumentProcessingStatusService {
     public void updateStatus(UUID documentId, DocumentStatus status) {
 
         Document document = findDocument(documentId);
+        if (document.getStatus() == DocumentStatus.DELETING) {
+            throw new IllegalStateException("Document is being deleted");
+        }
 
         document.setStatus(status);
         documentRepository.save(document);
@@ -27,6 +30,9 @@ public class DocumentProcessingStatusService {
     public void markReady(UUID documentId) {
 
         Document document = findDocument(documentId);
+        if (document.getStatus() == DocumentStatus.DELETING) {
+            throw new IllegalStateException("Document is being deleted");
+        }
 
         document.setStatus(DocumentStatus.READY);
         document.setErrorCode(null);
@@ -43,6 +49,9 @@ public class DocumentProcessingStatusService {
     ) {
 
         Document document = findDocument(documentId);
+        if (document.getStatus() == DocumentStatus.DELETING) {
+            return;
+        }
 
         document.markedFailed(
                 errorCode,

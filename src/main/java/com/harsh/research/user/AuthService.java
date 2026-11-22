@@ -1,6 +1,6 @@
 package com.harsh.research.user;
 
-import com.harsh.research.security.JwtService;
+import com.harsh.research.common.ConflictException;
 import com.harsh.research.user.dto.AuthResponse;
 import com.harsh.research.user.dto.LoginRequest;
 import com.harsh.research.user.dto.RegisterRequest;
@@ -17,24 +17,24 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) throws Exception {
         String email = request.email().trim().toLowerCase(java.util.Locale.ROOT);
 
         if (userRepository.existsByEmail(email)) {
-            throw new Exception("User with this email already exists");
+            throw new ConflictException("User with this email already exists");
         }
 
         if (request.password().getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72) {
-            throw new Exception("Password must not exceed 72 UTF-8 bytes");
+            throw new IllegalArgumentException("Password must not exceed 72 UTF-8 bytes");
         }
 
         if (CommonPasswords.LIST.stream()
                 .anyMatch(common -> common.equalsIgnoreCase(request.password()))) {
-            throw new Exception("That password is too common. Please choose another one");
+            throw new IllegalArgumentException("That password is too common. Please choose another one");
         }
 
         User user = User.register(
@@ -48,13 +48,17 @@ public class AuthService {
             // method rather than later at transaction commit.
             user = userRepository.saveAndFlush(user);
         } catch (DataIntegrityViolationException exception) {
-            throw new Exception("User with this email already exists", exception);
+            throw new ConflictException("User with this email already exists");
         }
 
         return toAuthResponse(user);
     }
 
+    @Transactional
     public AuthResponse login(LoginRequest request) throws Exception {
+        if (request.password().getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72) {
+            throw new BadCredentialsException("Invalid username or password");
+        }
         String email = request.email().trim().toLowerCase(java.util.Locale.ROOT);
 
         User user = userRepository.findByEmail(email)
@@ -67,19 +71,66 @@ public class AuthService {
         }
 
         if (user.getStatus() == UserStatus.SUSPEND) {
-            throw new Exception("This account has been suspended");
+            throw new org.springframework.security.authentication.DisabledException("This account has been suspended");
         }
 
         return toAuthResponse(user);
     }
 
-    private AuthResponse toAuthResponse(User user) {
-        String token = jwtService.generateAccessToken(
-                user.getId(),
-                user.getEmail(),
-                user.getRole().name()
-        );
 
-        return new AuthResponse(token, UserResponse.from(user));
+    @Transactional
+    public AuthResponse refresh(String rawRefreshToken) {
+        RefreshTokenService.IssuedTokens tokens =
+                refreshTokenService.rotate(rawRefreshToken);
+        User user = userRepository.findById(tokens.userId())
+                .orElseThrow(() -> new BadCredentialsException("Refresh token is invalid or expired"));
+        return new AuthResponse(
+                tokens.accessToken(),
+                tokens.refreshToken(),
+                tokens.expiresInSeconds(),
+                UserResponse.from(user)
+        );
+    }
+
+    @Transactional
+    public void changePassword(
+            java.util.UUID userId,
+            com.harsh.research.user.dto.ChangePasswordRequest request
+    ) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BadCredentialsException("Invalid account"));
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new BadCredentialsException("Current password is incorrect");
+        }
+
+        if (request.newPassword().getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72) {
+            throw new IllegalArgumentException("Password must not exceed 72 UTF-8 bytes");
+        }
+        if (passwordEncoder.matches(request.newPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("New password must be different from the current password");
+        }
+        if (CommonPasswords.LIST.stream()
+                .anyMatch(common -> common.equalsIgnoreCase(request.newPassword()))) {
+            throw new IllegalArgumentException("That password is too common. Please choose another one");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+        refreshTokenService.revokeAllSessions(user);
+    }
+
+    public void logout(String rawRefreshToken) {
+        refreshTokenService.revoke(rawRefreshToken);
+    }
+
+    private AuthResponse toAuthResponse(User user) {
+        RefreshTokenService.IssuedTokens tokens = refreshTokenService.issue(user);
+        return new AuthResponse(
+                tokens.accessToken(),
+                tokens.refreshToken(),
+                tokens.expiresInSeconds(),
+                UserResponse.from(user)
+        );
     }
 }

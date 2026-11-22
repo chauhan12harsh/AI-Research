@@ -45,12 +45,22 @@ public class JwtService {
     }
 
     public String generateAccessToken(UUID userId, String email, String role) {
+        return generateAccessToken(userId, email, role, 0);
+    }
+
+    public String generateAccessToken(
+            UUID userId,
+            String email,
+            String role,
+            int tokenVersion
+    ) {
         Instant now = Instant.now();
 
         return Jwts.builder()
                 .subject(userId.toString())
                 .claim("email", email)
                 .claim("role", role)
+                .claim("ver", tokenVersion)
                 .id(UUID.randomUUID().toString())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(Duration.ofHours(1))))
@@ -69,12 +79,14 @@ public class JwtService {
             UUID userId = UUID.fromString(claims.getSubject());
             String email = claims.get("email", String.class);
             String role = claims.get("role", String.class);
+            Number versionClaim = claims.get("ver", Number.class);
+            int tokenVersion = versionClaim == null ? 0 : versionClaim.intValue();
 
-            if (email == null || role == null || role.isBlank()) {
+            if (email == null || role == null || role.isBlank() || tokenVersion < 0) {
                 return Optional.empty();
             }
 
-            return Optional.of(new AuthPrincipal(userId, email, role));
+            return Optional.of(new AuthPrincipal(userId, email, role, tokenVersion));
         } catch (JwtException | IllegalArgumentException exception) {
             return Optional.empty();
         }

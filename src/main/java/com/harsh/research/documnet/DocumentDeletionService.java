@@ -1,6 +1,7 @@
 package com.harsh.research.documnet;
 
-import com.harsh.research.workspace.WorkspaceService;
+import com.harsh.research.common.ResourceNotFoundException;
+import com.harsh.research.workspace.WorkspaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,7 +13,8 @@ import java.util.UUID;
 public class DocumentDeletionService {
 
     private final DocumentRepository documentRepository;
-    private final WorkspaceService workspaceService;
+    private final WorkspaceRepository workspaceRepository;
+    private final DocumentProcessingJobRepository jobRepository;
 
     /**
      * Marks the document as deleting and releases quota exactly once.
@@ -22,17 +24,25 @@ public class DocumentDeletionService {
     @Transactional
     public Document markDeleting(UUID documentId) throws Exception {
         Document document = documentRepository.findByIdAndDeletedAtIsNullForUpdate(documentId)
-                .orElseThrow(() -> new IllegalArgumentException("Document not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Document not found"));
 
         if (document.getStatus() != DocumentStatus.DELETING) {
+            jobRepository.cancelForDocument(
+                    documentId,
+                    DocumentProcessingJobStatus.PENDING,
+                    DocumentProcessingJobStatus.PROCESSING,
+                    DocumentProcessingJobStatus.DEAD
+            );
             document.setStatus(DocumentStatus.DELETING);
             documentRepository.save(document);
 
-            workspaceService.adjustCounters(
+            if (workspaceRepository.adjustUsageCounters(
                     document.getWorkspace().getId(),
                     -1,
                     -document.getSizeBytes()
-            );
+            ) != 1) {
+                throw new IllegalStateException("Workspace not found while releasing document quota");
+            }
         }
 
         return document;

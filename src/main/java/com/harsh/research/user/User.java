@@ -31,6 +31,9 @@ public class User extends AuditableEntity {
     @Column(nullable = false)
     private boolean isEmailVerified = false;
 
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private int tokenVersion = 0;
+
     public static User register(String email, String passwordHash,String fullName){
 
         User user = new User();

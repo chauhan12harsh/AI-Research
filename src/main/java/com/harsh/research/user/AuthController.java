@@ -4,6 +4,7 @@ import com.harsh.research.common.ApiResponse;
 import com.harsh.research.user.dto.AuthResponse;
 import com.harsh.research.user.dto.LoginRequest;
 import com.harsh.research.user.dto.RegisterRequest;
+import com.harsh.research.user.dto.RefreshRequest;
 import com.harsh.research.user.dto.UserResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,6 @@ import java.util.UUID;
 public class AuthController {
 
     private final AuthService authService;
-    private final UserService userService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) throws  Exception{
@@ -46,7 +46,21 @@ public class AuthController {
     }
 
 
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(
+            @Valid @RequestBody RefreshRequest request
+    ) {
+        return ResponseEntity.ok(ApiResponse.Ok(
+                authService.refresh(request.refreshToken())
+        ));
+    }
 
-
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @Valid @RequestBody RefreshRequest request
+    ) {
+        authService.logout(request.refreshToken());
+        return ResponseEntity.ok(ApiResponse.Ok(null));
+    }
 
 }

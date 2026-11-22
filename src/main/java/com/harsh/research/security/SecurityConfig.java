@@ -44,9 +44,10 @@ public class SecurityConfig {
                 )
         ).csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
-                .authorizeHttpRequests(authorization -> authorization.requestMatchers(
-                        "/api/v1/auth/**"
-                ).permitAll().anyRequest().authenticated())
+                .authorizeHttpRequests(authorization -> authorization
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(restAuthEntryPoint)
                         .accessDeniedHandler(restAccessDeniedHandler)

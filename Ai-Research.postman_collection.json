@@ -17,7 +17,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiI2ZjNlOThmMS1jZTJlLTQ5OGUtYTViMi1mMjIzYTUxNTRhNDciLCJpYXQiOjE3OTUxNjYyOTcsImV4cCI6MTc5NTE2OTg5N30.Ynx_2QLgCXs2nmNcbHjteqomd2k63qwiUDVxqu2Wjww",
+                  "value": "{{accessToken}}",
                   "type": "string"
                 }
               ]
@@ -57,7 +57,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiIzMjRjZWY4Ny03ODY1LTQxNGQtOTVkYi03YTRkNGYyYzZjMDQiLCJpYXQiOjE3OTUyNzQxNTAsImV4cCI6MTc5NTI3Nzc1MH0.MLhyJxMVSoy7DAY7qM5lpCSEnumfDxDcuC7HFae1hdY",
+                  "value": "{{accessToken}}",
                   "type": "string"
                 }
               ]
@@ -88,7 +88,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiI2ZjNlOThmMS1jZTJlLTQ5OGUtYTViMi1mMjIzYTUxNTRhNDciLCJpYXQiOjE3OTUxNjYyOTcsImV4cCI6MTc5NTE2OTg5N30.Ynx_2QLgCXs2nmNcbHjteqomd2k63qwiUDVxqu2Wjww",
+                  "value": "{{accessToken}}",
                   "type": "string"
                 }
               ]
@@ -105,7 +105,7 @@
               }
             },
             "url": {
-              "raw": "http://localhost:5000/api/v1/workspaces/910f3424-f0af-40d4-82e3-36c8d5d67442",
+              "raw": "http://localhost:5000/api/v1/workspaces/{{workspaceId}}",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -115,7 +115,7 @@
                 "api",
                 "v1",
                 "workspaces",
-                "910f3424-f0af-40d4-82e3-36c8d5d67442"
+                "{{workspaceId}}"
               ]
             }
           },
@@ -134,7 +134,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiIzMjRjZWY4Ny03ODY1LTQxNGQtOTVkYi03YTRkNGYyYzZjMDQiLCJpYXQiOjE3OTUyNzQxNTAsImV4cCI6MTc5NTI3Nzc1MH0.MLhyJxMVSoy7DAY7qM5lpCSEnumfDxDcuC7HFae1hdY",
+                  "value": "{{accessToken}}",
                   "type": "string"
                 }
               ]
@@ -154,7 +154,7 @@
               ]
             },
             "url": {
-              "raw": "http://localhost:5000/api/v1/workspace/910f3424-f0af-40d4-82e3-36c8d5d67442/documents?displayName=cloud-pricing-guide",
+              "raw": "http://localhost:5000/api/v1/workspace/{{workspaceId}}/documents?displayName=cloud-pricing-guide",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -164,7 +164,7 @@
                 "api",
                 "v1",
                 "workspace",
-                "910f3424-f0af-40d4-82e3-36c8d5d67442",
+                "{{workspaceId}}",
                 "documents"
               ],
               "query": [
@@ -185,7 +185,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiIzMjRjZWY4Ny03ODY1LTQxNGQtOTVkYi03YTRkNGYyYzZjMDQiLCJpYXQiOjE3OTUyNzQxNTAsImV4cCI6MTc5NTI3Nzc1MH0.MLhyJxMVSoy7DAY7qM5lpCSEnumfDxDcuC7HFae1hdY",
+                  "value": "{{accessToken}}",
                   "type": "string"
                 }
               ]
@@ -202,7 +202,7 @@
               }
             },
             "url": {
-              "raw": "http://localhost:5000/api/v1/documents/c711aa61-6f62-49e2-aad0-8d7462c08746",
+              "raw": "http://localhost:5000/api/v1/documents/{{documentId}}",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -212,7 +212,7 @@
                 "api",
                 "v1",
                 "documents",
-                "c711aa61-6f62-49e2-aad0-8d7462c08746"
+                "{{documentId}}"
               ]
             }
           },
@@ -226,7 +226,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiIzMjRjZWY4Ny03ODY1LTQxNGQtOTVkYi03YTRkNGYyYzZjMDQiLCJpYXQiOjE3OTUyNzQxNTAsImV4cCI6MTc5NTI3Nzc1MH0.MLhyJxMVSoy7DAY7qM5lpCSEnumfDxDcuC7HFae1hdY",
+                  "value": "{{accessToken}}",
                   "type": "string"
                 }
               ]
@@ -234,7 +234,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:5000/api/v1/workspace/910f3424-f0af-40d4-82e3-36c8d5d67442/documents",
+              "raw": "http://localhost:5000/api/v1/workspace/{{workspaceId}}/documents",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -244,7 +244,7 @@
                 "api",
                 "v1",
                 "workspace",
-                "910f3424-f0af-40d4-82e3-36c8d5d67442",
+                "{{workspaceId}}",
                 "documents"
               ]
             }
@@ -259,7 +259,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiIzMjRjZWY4Ny03ODY1LTQxNGQtOTVkYi03YTRkNGYyYzZjMDQiLCJpYXQiOjE3OTUyNzQxNTAsImV4cCI6MTc5NTI3Nzc1MH0.MLhyJxMVSoy7DAY7qM5lpCSEnumfDxDcuC7HFae1hdY",
+                  "value": "{{accessToken}}",
                   "type": "string"
                 }
               ]
@@ -276,7 +276,7 @@
               }
             },
             "url": {
-              "raw": "http://localhost:5000/api/v1/documents/c711aa61-6f62-49e2-aad0-8d7462c08746/download",
+              "raw": "http://localhost:5000/api/v1/documents/{{documentId}}/download",
               "protocol": "http",
               "host": [
                 "localhost"
@@ -286,8 +286,38 @@
                 "api",
                 "v1",
                 "documents",
-                "c711aa61-6f62-49e2-aad0-8d7462c08746",
+                "{{documentId}}",
                 "download"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get processing status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/{{documentId}}/processing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "documents",
+                "{{documentId}}",
+                "processing"
               ]
             }
           },
@@ -302,7 +332,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"email\":\"vapo@gmail.com\",\r\n    \"password\":\"vapo@123\",\r\n    \"fullName\":\"vapo rub\"\r\n}",
+          "raw": "{\r\n    \"email\":\"{{email}}\",\r\n    \"password\":\"{{password}}\",\r\n    \"fullName\":\"{{fullName}}\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -333,7 +363,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"email\":\"vapo@gmail.com\",\r\n    \"password\":\"vapo@123\"\r\n\r\n}",
+          "raw": "{\r\n    \"email\":\"{{email}}\",\r\n    \"password\":\"{{password}}\"\r\n\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -365,7 +395,7 @@
           "bearer": [
             {
               "key": "token",
-              "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJlYzg5MGM4OC02OTg1LTQ1YzItYjI4ZC1kMjU4YjU2ZjQ0NzAiLCJlbWFpbCI6InZhcG9AZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJqdGkiOiIzMjRjZWY4Ny03ODY1LTQxNGQtOTVkYi03YTRkNGYyYzZjMDQiLCJpYXQiOjE3OTUyNzQxNTAsImV4cCI6MTc5NTI3Nzc1MH0.MLhyJxMVSoy7DAY7qM5lpCSEnumfDxDcuC7HFae1hdY",
+              "value": "{{accessToken}}",
               "type": "string"
             }
           ]
@@ -388,6 +418,309 @@
         }
       },
       "response": []
+    },
+    {
+      "name": "RAG Chat",
+      "item": [
+        {
+          "name": "Ask workspace documents",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Summarize the key findings in my documents.\",\n  \"conversationId\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workspaces/{{workspaceId}}/ask",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workspaces",
+                "{{workspaceId}}",
+                "ask"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List conversations",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workspaces/{{workspaceId}}/conversations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workspaces",
+                "{{workspaceId}}",
+                "conversations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get conversation messages",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workspaces/{{workspaceId}}/conversations/{{conversationId}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workspaces",
+                "{{workspaceId}}",
+                "conversations",
+                "{{conversationId}}",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete conversation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workspaces/{{workspaceId}}/conversations/{{conversationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workspaces",
+                "{{workspaceId}}",
+                "conversations",
+                "{{conversationId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authentication lifecycle",
+      "item": [
+        {
+          "name": "Refresh access token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout and revoke refresh token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Change account password",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{newPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/users/me/password",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "users",
+            "me",
+            "password"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "email",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": ""
+    },
+    {
+      "key": "fullName",
+      "value": ""
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "workspaceId",
+      "value": ""
+    },
+    {
+      "key": "documentId",
+      "value": ""
+    },
+    {
+      "key": "conversationId",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "newPassword",
+      "value": ""
     }
   ]
 }

@@ -1,11 +1,13 @@
 package com.harsh.research.chat;
 
+import com.harsh.research.common.ResourceNotFoundException;
 import com.harsh.research.chat.dto.ChatMessageResponse;
 import com.harsh.research.chat.dto.ConversationResponse;
 import com.harsh.research.workspace.Workspace;
 import com.harsh.research.workspace.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +38,7 @@ public class ConversationService {
                             conversationId, workspaceId, userId
                     )
                     .orElseThrow(() ->
-                            new IllegalArgumentException("Conversation not found")
+                            new ResourceNotFoundException("Conversation not found")
                     );
         }
 
@@ -63,9 +65,14 @@ public class ConversationService {
             Pageable pageable
     ) throws Exception {
         workspaceService.get(workspaceId, userId);
+        Pageable boundedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                Math.min(pageable.getPageSize(), 100),
+                pageable.getSort()
+        );
         return conversationRepository
                 .findAllByWorkspace_IdAndUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(
-                        workspaceId, userId, pageable
+                        workspaceId, userId, boundedPageable
                 )
                 .map(conversation -> new ConversationResponse(
                         conversation.getId(),
@@ -83,7 +90,7 @@ public class ConversationService {
                 .findByIdAndWorkspace_IdAndUserIdAndDeletedAtIsNull(
                         conversationId, workspaceId, userId
                 )
-                .orElseThrow(() -> new IllegalArgumentException("Conversation not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
 
         return chatMessageRepository
                 .findTop12ByConversation_IdOrderByCreatedAtDesc(conversation.getId())
@@ -122,7 +129,7 @@ public class ConversationService {
                 .findByIdAndWorkspace_IdAndUserIdAndDeletedAtIsNull(
                         conversationId, workspaceId, userId
                 )
-                .orElseThrow(() -> new IllegalArgumentException("Conversation not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
 
         chatMessageRepository.deleteAllByConversation_Id(conversationId);
         conversation.softDelete();

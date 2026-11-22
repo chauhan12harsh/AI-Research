@@ -1,7 +1,10 @@
 package com.harsh.research.workspace;
 
+import com.harsh.research.common.ConflictException;
+import com.harsh.research.common.ResourceNotFoundException;
 import com.harsh.research.documnet.Document;
 import com.harsh.research.documnet.DocumentCleanupService;
+import com.harsh.research.documnet.DocumentDeletionService;
 import com.harsh.research.documnet.DocumentRepository;
 import com.harsh.research.chat.ChatMessageRepository;
 import com.harsh.research.chat.Conversation;
@@ -22,12 +25,13 @@ public class WorkspaceService {
     private final WorkspaceRepository workspaceRepository;
     private final DocumentRepository documentRepository;
     private final DocumentCleanupService documentCleanupService;
+    private final DocumentDeletionService documentDeletionService;
     private final ConversationRepository conversationRepository;
     private final ChatMessageRepository chatMessageRepository;
 
     public Workspace create(UUID ownerId, CreateWorkspaceRequest request) throws Exception {
         if (workspaceRepository.existsByOwnerAndName(ownerId, request.name())) {
-            throw new Exception("Workspace already exists with this name");
+            throw new ConflictException("Workspace already exists with this name");
         }
 
         Workspace workspace = Workspace.create(
@@ -42,7 +46,7 @@ public class WorkspaceService {
 
     public Workspace get(UUID workspaceId, UUID ownerId) throws Exception {
         return workspaceRepository.findByIdAndOwnerIdAndDeletedAtNull(workspaceId, ownerId)
-                .orElseThrow(() -> new Exception("Workspace not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Workspace not found"));
     }
 
     public Workspace update(
@@ -55,7 +59,7 @@ public class WorkspaceService {
         if (request.name() != null && !request.name().isBlank()
                 && !request.name().trim().equalsIgnoreCase(workspace.getName())) {
             if (workspaceRepository.existsByOwnerAndName(ownerId, request.name().trim())) {
-                throw new Exception("Workspace already exists with this name");
+                throw new ConflictException("Workspace already exists with this name");
             }
             workspace.setName(request.name().trim());
         }
@@ -69,7 +73,7 @@ public class WorkspaceService {
 
     public void delete(UUID workspaceId, UUID ownerId) throws Exception {
         Workspace workspace = workspaceRepository.findByIdAndOwnerId(workspaceId, ownerId)
-                .orElseThrow(() -> new Exception("Workspace not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Workspace not found"));
 
         // Hide the workspace first so new uploads cannot reserve quota. Repeated
         // DELETE requests still find the soft-deleted row and resume cleanup.
@@ -82,9 +86,10 @@ public class WorkspaceService {
                 documentRepository.findAllByWorkspace_IdAndDeletedAtIsNull(workspaceId);
 
         for (Document document : documents) {
-            documentCleanupService.cleanup(document);
-            document.softDelete();
-            documentRepository.save(document);
+            Document deleting = documentDeletionService.markDeleting(document.getId());
+            documentCleanupService.cleanup(deleting);
+            deleting.softDelete();
+            documentRepository.save(deleting);
         }
 
         List<Conversation> conversations =
@@ -96,6 +101,9 @@ public class WorkspaceService {
             conversationRepository.save(conversation);
         }
 
+        if (!conversations.isEmpty()) {
+            adjustChatCount(workspaceId, -conversations.size());
+        }
     }
 
     @Transactional
@@ -118,7 +126,7 @@ public class WorkspaceService {
     @Transactional
     public void adjustChatCount(UUID workspaceId, int delta) throws Exception {
         if (workspaceRepository.adjustChatCounter(workspaceId, delta) != 1) {
-            throw new Exception("Workspace not found");
+            throw new ResourceNotFoundException("Workspace not found");
         }
     }
 
@@ -131,7 +139,7 @@ public class WorkspaceService {
         if (workspaceRepository.adjustUsageCounters(
                 workspaceId, docDelta, bytesDelta
         ) != 1) {
-            throw new Exception("Workspace not found");
+            throw new ResourceNotFoundException("Workspace not found");
         }
     }
 }

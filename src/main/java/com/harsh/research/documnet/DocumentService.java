@@ -1,5 +1,6 @@
 package com.harsh.research.documnet;
 
+import com.harsh.research.common.ResourceNotFoundException;
 import com.harsh.research.config.StorageProperties;
 import com.harsh.research.documnet.dto.DocumentContentResponse;
 import com.harsh.research.documnet.storage.B2StorageService;
@@ -9,6 +10,7 @@ import com.harsh.research.workspace.Workspace;
 import com.harsh.research.workspace.WorkspaceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,7 +36,7 @@ public class DocumentService {
     private final StorageProperties storageProperties;
     private final StorageKeyFactory storageKeyFactory;
     private final B2StorageService b2StorageService;
-    private final DocumentIngestionSteps ingestionSteps;
+    private final DocumentProcessingQueue processingQueue;
     private final DocumentCleanupService cleanupService;
     private final DocumentDeletionService deletionService;
 
@@ -127,12 +129,35 @@ public class DocumentService {
         }
 
         try {
-            document.setStatus(DocumentStatus.UPLOADED);
-            documentRepository.save(document);
+            int markedUploaded = documentRepository.markUploadedIfWorkspaceActive(
+                    document.getId(),
+                    DocumentStatus.PENDING,
+                    DocumentStatus.UPLOADED
+            );
+            if (markedUploaded != 1) {
+                try {
+                    b2StorageService.delete(storageKey);
+                } catch (RuntimeException cleanupFailure) {
+                    // Restore a durable DELETING row so the cleanup worker can
+                    // retry even if a concurrent delete had already soft-deleted it.
+                    documentRepository.findById(document.getId()).ifPresent(orphan -> {
+                        orphan.setDeletedAt(null);
+                        orphan.setStatus(DocumentStatus.DELETING);
+                        documentRepository.save(orphan);
+                    });
+                    throw new IllegalStateException(
+                            "Document is being deleted and its uploaded object could not be cleaned",
+                            cleanupFailure
+                    );
+                }
+                throw new IllegalStateException(
+                        "Workspace or document deletion started while the file was uploading"
+                );
+            }
+        } catch (IllegalStateException lifecycleConflict) {
+            throw lifecycleConflict;
         } catch (RuntimeException persistenceFailure) {
-            // Keep the original object and reserved quota: if the status write
-            // failed, retaining the file allows an operator or retry flow to
-            // recover the document rather than creating an orphan.
+            // Keep the source object and quota so an operator can recover the row.
             try {
                 markUploadFailed(document, "DOCUMENT_STATUS_UPDATE_FAILED");
             } catch (RuntimeException statusFailure) {
@@ -141,13 +166,7 @@ public class DocumentService {
             throw persistenceFailure;
         }
 
-        // Processing failures are persisted as FAILED by DocumentIngestionSteps.
-        // Return the document so the client can display its state and offer retry.
-        try {
-            ingestionSteps.process(document.getId());
-        } catch (RuntimeException ignored) {
-            // Status and error details are recorded by the ingestion pipeline.
-        }
+        processingQueue.enqueue(document.getId());
 
         return documentRepository.findByIdAndDeletedAtIsNull(document.getId())
                 .orElseThrow(() -> new IllegalStateException("Document not found after upload"));
@@ -156,7 +175,7 @@ public class DocumentService {
     public Document get(UUID documentId, UUID ownerId) throws Exception {
         return documentRepository.findByIdAndWorkspace_OwnerIdAndDeletedAtIsNull(
                 documentId, ownerId
-        ).orElseThrow(() -> new Exception("Document not found"));
+        ).orElseThrow(() -> new ResourceNotFoundException("Document not found"));
     }
 
     public Page<Document> search(
@@ -168,8 +187,13 @@ public class DocumentService {
             Pageable pageable
     ) throws Exception {
         workspaceService.get(workspaceId, ownerId);
+        Pageable boundedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                Math.min(pageable.getPageSize(), 100),
+                pageable.getSort()
+        );
         return documentRepository.search(
-                workspaceId, status, sourceType, q == null ? "" : q.trim(), pageable
+                workspaceId, status, sourceType, q == null ? "" : q.trim(), boundedPageable
         );
     }
 
@@ -207,11 +231,11 @@ public class DocumentService {
     public Document retry(UUID documentId, UUID ownerId) throws Exception {
         Document document = get(documentId, ownerId);
         if (document.getStatus() != DocumentStatus.FAILED) {
-            throw new Exception("Only a failed document can be retried");
+            throw new IllegalStateException("Only a failed document can be retried");
         }
         if (isMissingStorageKey(document.getStorageKey())
                 || !b2StorageService.exists(document.getStorageKey())) {
-            throw new Exception("Original document file is unavailable; upload it again");
+            throw new IllegalStateException("Original document file is unavailable; upload it again");
         }
 
         document.setStatus(DocumentStatus.UPLOADED);
@@ -219,11 +243,7 @@ public class DocumentService {
         document.setErrorMessage(null);
         documentRepository.save(document);
 
-        try {
-            ingestionSteps.process(document.getId());
-        } catch (RuntimeException ignored) {
-            // The ingestion pipeline records FAILED status and a safe error message.
-        }
+        processingQueue.enqueue(document.getId());
 
         return documentRepository.findByIdAndDeletedAtIsNull(document.getId())
                 .orElseThrow(() -> new IllegalStateException("Document not found after retry"));
