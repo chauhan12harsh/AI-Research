@@ -14,11 +14,12 @@ import java.util.UUID;
 public class DocumentProcessingQueue {
 
     private static final int MAX_ATTEMPTS = 5;
-    private static final Duration LOCK_TIMEOUT = Duration.ofHours(1);
+    private static final Duration LOCK_TIMEOUT = Duration.ofHours(2);
 
     private final DocumentProcessingJobRepository jobRepository;
     private final DocumentIngestionSteps ingestionSteps;
     private final DocumentRepository documentRepository;
+    private final DocumentProcessingStatusService statusService;
 
     @Transactional
     public void enqueue(UUID documentId) {
@@ -108,13 +109,31 @@ public class DocumentProcessingQueue {
                 jobRepository.findTop20ByStatusAndLockedAtBeforeOrderByLockedAtAsc(
                         DocumentProcessingJobStatus.PROCESSING, staleBefore
                 )) {
-            jobRepository.releaseStale(
+            int released = jobRepository.releaseStale(
                     stale.getId(),
                     DocumentProcessingJobStatus.PROCESSING,
                     DocumentProcessingJobStatus.PENDING,
+                    DocumentProcessingJobStatus.DEAD,
+                    MAX_ATTEMPTS,
                     now,
                     staleBefore
             );
+            if (released == 1) {
+                DocumentProcessingJob refreshed = jobRepository.findById(stale.getId())
+                        .orElse(null);
+                if (refreshed != null
+                        && refreshed.getStatus() == DocumentProcessingJobStatus.DEAD) {
+                    try {
+                        statusService.markFailed(
+                                refreshed.getDocumentId(),
+                                "PROCESSING_WORKER_TIMEOUT",
+                                "Document processing repeatedly timed out"
+                        );
+                    } catch (RuntimeException ignored) {
+                        // The document may already be deleting; cleanup owns that state.
+                    }
+                }
+            }
         }
     }
 }
