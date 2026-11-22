@@ -27,7 +27,7 @@ public class RefreshTokenService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
 
-    public record IssuedTokens(String accessToken, String refreshToken, long expiresInSeconds) {}
+    public record IssuedTokens(UUID userId, String accessToken, String refreshToken, long expiresInSeconds) {}
 
     @Transactional
     public IssuedTokens issue(User user) {
@@ -42,6 +42,7 @@ public class RefreshTokenService {
         ));
 
         return new IssuedTokens(
+                user.getId(),
                 jwtService.generateAccessToken(
                         user.getId(), user.getEmail(), user.getRole().name()
                 ),
