@@ -13,6 +13,7 @@ public class DocumentDeletionService {
 
     private final DocumentRepository documentRepository;
     private final WorkspaceService workspaceService;
+    private final DocumentProcessingJobRepository jobRepository;
 
     /**
      * Marks the document as deleting and releases quota exactly once.
@@ -25,6 +26,12 @@ public class DocumentDeletionService {
                 .orElseThrow(() -> new IllegalArgumentException("Document not found"));
 
         if (document.getStatus() != DocumentStatus.DELETING) {
+            jobRepository.cancelForDocument(
+                    documentId,
+                    DocumentProcessingJobStatus.PENDING,
+                    DocumentProcessingJobStatus.PROCESSING,
+                    DocumentProcessingJobStatus.DEAD
+            );
             document.setStatus(DocumentStatus.DELETING);
             documentRepository.save(document);
 
