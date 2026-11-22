@@ -5,6 +5,7 @@ Spring Boot 4 / Java 21 research assistant with PostgreSQL + pgvector, Google Ge
 ## Features
 
 - Workspace-scoped PDF upload, validation, storage, extraction, chunking and embeddings.
+- Optional page-level OCR for scanned PDFs and mixed scanned/digital documents (Tesseract).
 - Durable PostgreSQL ingestion jobs with atomic claims, retry/backoff and stale-job recovery.
 - PGVector retrieval restricted to READY documents in the requested workspace.
 - Gemini answers grounded in retrieved passages with document/page/chunk citations.
@@ -90,6 +91,20 @@ Uploads return the document record immediately. Processing runs asynchronously; 
 - `DELETE /workspaces/{workspaceId}/conversations/{conversationId}`
 
 The Postman collection includes example requests. Configure its variables (`baseUrl`, `email`, `password`, `accessToken`, `refreshToken`, `workspaceId`, `documentId`, and `conversationId`) before running requests.
+
+### Scanned PDF OCR
+
+OCR is opt-in so deployments without the native Tesseract runtime are unaffected. Install Tesseract and the language data files on the application host/container, then configure:
+
+```yaml
+app:
+  ocr:
+    enabled: true
+    datapath: /usr/share/tesseract-ocr/5/tessdata
+    language: eng
+```
+
+The extractor first uses embedded PDF text and invokes OCR only for pages with fewer than 24 extracted characters. It preserves page separators for downstream chunk citations. Install additional traineddata files and set `language` (for example, `eng+hin`) when multilingual OCR is required. OCR increases CPU and memory use; keep the configured PDF page and upload limits appropriate for the deployment.
 
 ## Configuration notes
 
